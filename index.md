@@ -1,12 +1,11 @@
 # Generality Labs
 
-*measuring and accelerating scientific progress in AI safety*
+- We're the world's most outcome-obsessed R&D laboratory
+- Our mission is to measure and accelerate scientific progress in AI safety
 
 ## What do you do?
 
-We are the world's most outcome-obsessed R&D laboratory
-
-This means we do two things:
+We do two things:
 1. **Monitoring & Evaluation:** we develop metrics and standards that clarify what progress looks like
 2. **Product Development:** we build products that accelerate progress
 
@@ -14,11 +13,11 @@ This means we do two things:
 
 ## What are you currently working on?
 
-**1. Standardising the evals ecosystem to bring it into line with scientific best practices**
+**1. Standardising the AI evaluation ecosystem to bring it into line with scientific best practices**
 
 *What does that mean?*
 - All the evals, in one place, with outrageous amounts of metadata, which you can run and reconfigure however you want. They're also less broken
-- Monthly deep dives into a batch of lucky benchmarks, producing audit reports, public interest, and a bunch of new ways to measure the quality of evals
+- Monthly deep dives into benchmarks, producing audit reports, public concern, and a bunch of new ways to measure the quality of evals
 
 *Why are you doing it?*
 - AI evaluations are the ground-truth scientific measurement tool for AI behaviour, upon which risk models, forecasts and mitigations are built - fixing evals is the necessary 1st step towards accelerating scientific progress
@@ -43,15 +42,17 @@ This means we do two things:
 
 We exist because the science of understanding AI isn't moving fast enough.
 
-Our mission is to **measure and accelerate scientific progress in AI safety**
+Our mission is to measure and accelerate scientific progress in AI safety
 
 Our vision is an AI safety research ecosystem which:
 1. Prioritises actions using **objective feedback**; this involves:
    1. Quantifying the effectiveness and utilisation of research methodologies and infrastructure
    2. Benchmarking scientific outputs according to ideals such as generality, replicability and predictive accuracy
-2. **Learns from past scientific efforts** - including both failures and success stories; this includes:
+  
+2. **Learns from past scientific efforts** (both failures and success stories); this includes:
    1. Drawing inspiration from tools & methodologies which have been developed to solve similar problems that AI safety must overcome
    2. Avoiding foreseeable hurdles such as [publication bias](https://en.wikipedia.org/wiki/Publication_bias) and un-[FAIR](https://en.wikipedia.org/wiki/FAIR_data) research outputs
+      
 3. Demonstrates **strategic foresight**, with a preference for proactive rather than reactive problem solving; for example:
    1. Deliberately aligning incentives towards collectively beneficial outcomes
    2. Building research infrastructure and methodologies to maximally leverage the capabilities of AI systems for automation
