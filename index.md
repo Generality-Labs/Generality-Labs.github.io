@@ -1,3 +1,7 @@
+> **The key bottleneck for alignment research is moving from proposing and executing ideas to designing evals: we should find the right metrics (data, models) that AARs (automated alignment researchers) can reliably hill-climb without overfitting. We are excited to apply automation to ambitious alignment research today.**
+
+*Anthropic, April 2026; [link](https://alignment.anthropic.com/2026/automated-w2s-researcher/)*
+
 # Generality Labs
 
 - We're the world's most outcome-obsessed R&D laboratory
@@ -17,7 +21,7 @@ We do two things:
 
 *What does that mean?*
 - All the evals, in one place, with outrageous amounts of metadata, which you can run and reconfigure however you want. They're also less broken
-- Monthly deep dives into benchmarks, producing audit reports, public concern, and a bunch of new ways to measure the quality of evals
+- Monthly deep dives into benchmarks, producing audit reports, actionable recommendations, and a bunch of new ways to measure the quality of evals
 
 *Why are you doing it?*
 - AI evaluations are the ground-truth scientific measurement tool for AI behaviour, upon which risk models, forecasts and mitigations are built - fixing evals is the necessary 1st step towards accelerating scientific progress
@@ -26,20 +30,21 @@ We do two things:
 **2. R&D for measuring scientific progress**
 
 *What does that mean?*
-- Research papers which show how you can measure the usefuless of other research papers
+- Research papers which show how you can measure the usefuless of research papers
 - Research products (e.g. nice dashboards, grand experiments) which show why you should care
 
 *Why are you doing it?*
 
-
-- Mitigate publication bias and prevent a replication crisis
+1. Mitigate publication bias and prevent a replication crisis
     - Replicability crises emerge because scientific studies build compelling narratives from incomplete results ([humans are fundamentally biased towards making this mistake](https://www.google.com/search?q=%22what+you+see+is+all+there+is%22+WYSIATI&sca_esv=cd246a25237b15d7&rlz=1C1ONGR_en-GBAU1104AU1104&sxsrf=ANbL-n7mCM5WcS7gm-vgtVkfuL88WKn4iw%3A1776372374895&ei=lkrhaZuzNpe7hbIPpOyzmAk&biw=2276&bih=1092&ved=0ahUKEwib1pPjnvOTAxWXXUEAHST2DJMQ4dUDCBE&uact=5&oq=%22what+you+see+is+all+there+is%22+WYSIATI&gs_lp=Egxnd3Mtd2l6LXNlcnAiJiJ3aGF0IHlvdSBzZWUgaXMgYWxsIHRoZXJlIGlzIiBXWVNJQVRJSIJoUPIDWKJccAJ4AZABAJgBnwGgAZsKqgEEMTAuNLgBA8gBAPgBAZgCC6AC7wbCAgoQABiwAxjWBBhHwgIOEAAYsAMY5AIY1gTYAQHCAhcQLhiwAxi4BhjYAhjIAxjaBhjcBtgBAcICBRAAGIAEwgIGEAAYFhgewgILEAAYgAQYhgMYigXCAgUQABjvBcICBBAAGB7CAgYQABgHGB7CAgUQIRigAcICBRAhGJ8FwgIHECEYoAEYCpgDAIgGAZAGD7oGBggBEAEYCZIHAzYuNaAH8jyyBwM0LjW4B-cGwgcFMC40LjfIByGACAA&sclient=gws-wiz-serp))
     - The state of AI research is yet to learn important lessons from other fields; e.g. [most studies neglect](https://arxiv.org/pdf/2511.04703) basic precautions such as testing for statistical significance, and yet statistical rigour is just the [tip of the iceberg](https://www.google.com/search?q=Experiments+on+extrasensory+perception+bem&sca_esv=cd246a25237b15d7&rlz=1C1ONGR_en-GBAU1104AU1104&biw=2276&bih=1092&sxsrf=ANbL-n5KSExM137C-rieI8YbKuBBY0LUFw%3A1776371862113&ei=lkjhadLMBvWRhbIP5bSlqAM&ved=0ahUKEwjS79HunPOTAxX1SEEAHWVaCTUQ4dUDCBE&uact=5&oq=Experiments+on+extrasensory+perception+bem&gs_lp=Egxnd3Mtd2l6LXNlcnAiKkV4cGVyaW1lbnRzIG9uIGV4dHJhc2Vuc29yeSBwZXJjZXB0aW9uIGJlbTIFECEYoAEyBRAhGKABMgUQIRigATIFECEYoAFI7gVQjwRYjwRwAXgAkAEAmAGUAaAB4gGqAQMxLjG4AQPIAQD4AQGYAgKgAqMBwgIKEAAYsAMY1gQYR8ICDhAAGLADGOQCGNYE2AEBwgIXEC4YsAMYuAYY2AIYyAMY2gYY3AbYAQGYAwCIBgGQBg-6BgYIARABGAmSBwMxLjGgB_kWsgcDMC4xuAeaAcIHBTAuMS4xyAcIgAgA&sclient=gws-wiz-serp)
-- Once we've learned how to do science, and measure that we're doing it right, we can then automate scientific progress
-    - Agents and humans both do their best work when they have clear metrics & feedback signals
  
 *Bean et al. (2025) show that only ~16% of 445 LLM benchmarks used statistical tests when reporting results*
-![stats misery](Bean et al. 2025.png)
+![stats misery](Bean et al. 2025.png)**
+
+2. Once we've learned how to do science, and measure that we're doing it right, we can then automate scientific progress
+    - Agents and humans both do their best work when they have clear metrics & feedback signals
+
 
 ## Why are you working on this?
 
