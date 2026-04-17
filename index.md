@@ -38,7 +38,7 @@ We do two things:
 - Once we've learned how to do science, and measure that we're doing it right, we can then automate scientific progress
     - Agents and humans both do their best work when they have clear metrics & feedback signals
  
-Figure: Bean et al. (2025) show that only ~16% of 445 LLM benchmarks used statistical tests when reporting results
+*Bean et al. (2025) show that only ~16% of 445 LLM benchmarks used statistical tests when reporting results*
 ![stats misery](Bean et al. 2025.png)
 
 ## Why are you working on this?
