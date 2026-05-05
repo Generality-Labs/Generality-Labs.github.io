@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      Generality Labs — Monitor and Accelerate the science of AI safety
+    </title>
+    <meta
+      name="description"
+      content="An R&D laboratory monitoring and accelerating the science of AI safety."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fafafa;
+        --ink: #1a1919;
+        --muted: #5b5858;
+        --soft: #837878;
+        --hairline: #e6e6e6;
+        --paper: #f2f2f2;
+        --mint: #17cfb9;
+        --mint-pale: #d7f3ef;
+        --mint-soft: #ecf8f5;
+        --mint-deep: #24857a;
+        --mint-edge: #c5e8e1;
+      }
+
+      html,
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Geist",
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          system-ui,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: "ss01", "cv11";
+      }
+
+      .mono {
+        font-family:
+          "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular,
+          monospace;
+      }
+
+      /* ─── type scale ─── */
+      .display-1 {
+        font-size: clamp(2.6rem, 6.2vw, 5.25rem);
+        line-height: 0.98;
+        letter-spacing: -0.035em;
+        font-weight: 500;
+      }
+      .display-2 {
+        font-size: clamp(1.9rem, 3.8vw, 2.85rem);
+        line-height: 1.06;
+        letter-spacing: -0.025em;
+        font-weight: 500;
+      }
+      .display-3 {
+        font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+        line-height: 1.2;
+        letter-spacing: -0.018em;
+        font-weight: 500;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        letter-spacing: -0.012em;
+      }
+
+      .eyebrow {
+        font-family: "Geist Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--soft);
+        font-weight: 400;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        background: var(--mint-pale);
+        color: var(--mint-deep);
+        font-size: 12px;
+        font-weight: 500;
+        border: 1px solid var(--mint-edge);
+      }
+      .pill-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--mint);
+      }
+      .pill-dot.live {
+        box-shadow: 0 0 0 4px rgba(23, 207, 185, 0.18);
+      }
+
+      /* ─── links ─── */
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      a.link {
+        color: var(--ink);
+        border-bottom: 1px solid var(--mint-edge);
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+      }
+      a.link:hover {
+        color: var(--mint-deep);
+        border-color: var(--mint);
+      }
+
+      /* ─── buttons ─── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.85rem 1.4rem;
+        border-radius: 999px;
+        font-weight: 500;
+        font-size: 15px;
+        transition:
+          transform 0.15s ease,
+          background 0.15s ease,
+          box-shadow 0.15s ease;
+        white-space: nowrap;
+      }
+      .btn-sm {
+        padding: 0.55rem 1.05rem;
+        font-size: 13.5px;
+      }
+      .btn svg {
+        transition: transform 0.15s ease;
+      }
+      .btn:hover svg {
+        transform: translateX(2px);
+      }
+
+      .btn-mint {
+        background: var(--mint);
+        color: #052b24;
+      }
+      .btn-mint:hover {
+        background: #14bba8;
+      }
+
+      .btn-dark {
+        background: var(--ink);
+        color: var(--bg);
+      }
+      .btn-dark:hover {
+        background: #2a2828;
+        transform: translateY(-1px);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid var(--hairline);
+      }
+      .btn-ghost:hover {
+        background: #fff;
+        border-color: #c5c5c5;
+      }
+
+      .btn-on-dark {
+        background: #fff;
+        color: var(--ink);
+      }
+      .btn-on-dark:hover {
+        background: var(--mint);
+      }
+
+      /* ─── cards ─── */
+      .card {
+        background: #ffffff;
+        border: 1px solid var(--hairline);
+        border-radius: 22px;
+        padding: 2rem;
+        transition:
+          border-color 0.2s,
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .card:hover {
+        border-color: #cbcbcb;
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.02),
+          0 12px 30px -22px rgba(0, 0, 0, 0.12);
+      }
+
+      .card-mint {
+        background: var(--mint-pale);
+        border: 1px solid var(--mint-edge);
+        border-radius: 22px;
+      }
+
+      .card-soft {
+        background: var(--paper);
+        border: 1px solid var(--hairline);
+        border-radius: 22px;
+      }
+
+      .hairline {
+        border-color: var(--hairline);
+      }
+
+      /* ─── nav ─── */
+      nav.top {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      /* ─── logo glyph (∀) ─── */
+      .logo-glyph {
+        font-family:
+          "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular,
+          monospace;
+        color: var(--mint-deep);
+        font-weight: 500;
+        font-size: 22px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        display: inline-block;
+        transform: translateY(1px);
+      }
+      .logo-glyph--lg {
+        font-size: 28px;
+      }
+
+      /* numbered marker */
+      ol.numbered {
+        list-style: decimal outside;
+        padding-left: 1.5rem;
+      }
+      ol.numbered > li::marker {
+        color: var(--mint-deep);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* arrow link inside cards */
+      .arrow-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--mint-deep);
+        font-weight: 500;
+        font-size: 14px;
+      }
+      .arrow-link svg {
+        transition: transform 0.15s ease;
+      }
+      .arrow-link:hover svg {
+        transform: translateX(3px);
+      }
+
+      /* dark band overrides */
+      .on-dark .eyebrow {
+        color: #b8b3b3;
+      }
+      .on-dark a.link {
+        border-color: rgba(23, 207, 185, 0.35);
+        color: #fff;
+      }
+      .on-dark a.link:hover {
+        color: var(--mint);
+        border-color: var(--mint);
+      }
+
+      ::selection {
+        background: var(--mint);
+        color: var(--ink);
+      }
+
+      /* tiny fade-in on first paint */
+      .reveal {
+        animation: reveal 0.7s ease both;
+      }
+      @keyframes reveal {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ════════════ NAV ════════════ -->
+    <nav class="top">
+      <div
+        class="max-w-7xl mx-auto px-5 lg:px-10 h-16 flex items-center justify-between"
+      >
+        <a href="#top" class="flex items-baseline gap-2 group">
+          <span class="logo-glyph">∀</span>
+          <span class="font-medium tracking-tight text-[15px]"
+            >Generality Labs</span
+          >
+        </a>
+        <div
+          class="hidden md:flex items-center gap-9 text-[14px] text-[var(--muted)]"
+        >
+          <a href="#mission" class="hover:text-[var(--ink)] transition"
+            >Mission</a
+          >
+          <a href="#work" class="hover:text-[var(--ink)] transition">Work</a>
+          <a href="#about" class="hover:text-[var(--ink)] transition">About</a>
+        </div>
+        <a
+          href="https://forms.gle/sFLHvksmC4Bq1D556"
+          class="btn btn-mint btn-sm"
+        >
+          Get in touch
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+      </div>
+    </nav>
+
+    <main id="top">
+      <!-- ════════════ HERO ════════════ -->
+      <section
+        class="max-w-7xl mx-auto px-5 lg:px-10 pt-20 lg:pt-28 pb-24 lg:pb-32"
+      >
+        <div class="max-w-5xl reveal">
+          <h1 class="display-1">
+            Monitor and accelerate<br />
+            progress in the science of
+            <span class="text-[var(--mint-deep)] whitespace-nowrap"
+              >AI safety</span
+            >
+          </h1>
+          <p class="mt-10 text-xl md:text-3xl max-w-7xl leading-snug">
+            Tool, evals and KPIs for faster, better AI safety research
+          </p>
+          <!-- <div class="mt-10 flex gap-3 flex-wrap">
+            <a href="#work" class="btn btn-dark">
+              See our work
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+            <a href="https://forms.gle/sFLHvksmC4Bq1D556" class="btn btn-ghost"
+              >Join us</a
+            >
+          </div> -->
+        </div>
+      </section>
+
+      <!-- ════════════ MISSION (dark band) ════════════ -->
+      <section id="mission" class="bg-[var(--ink)] text-[var(--bg)] on-dark">
+        <div class="max-w-7xl mx-auto px-5 lg:px-10 py-24 lg:py-32">
+          <div class="mb-16">
+            <h2 class="display-2 max-w-7xl mb-8">
+              The science of understanding AI isn't moving fast enough. We fix
+              this by
+            </h2>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-6 lg:gap-10">
+            <div class="pt-7">
+              <h3 class="text-xl font-medium mb-4 leading-snug">
+                Developing indicators of research quality & performance.
+              </h3>
+              <p class="text-[#A8A3A3] text-[14.5px] leading-relaxed">
+                We replicate papers, run end-to-end experiments, and validate
+                evals.
+              </p>
+            </div>
+            <div class="pt-7">
+              <h3 class="text-xl font-medium mb-4 leading-snug">
+                Monitoring and reporting these indicators
+              </h3>
+              <p class="text-[#A8A3A3] text-[14.5px] leading-relaxed">
+                We publish monthly reports keeping the community informed about
+                the rate of scientific progress
+              </p>
+            </div>
+            <div class="pt-7">
+              <h3 class="text-xl font-medium mb-4 leading-snug">
+                Building products that help accelerate the rate of progress
+              </h3>
+              <p class="text-[#A8A3A3] text-[14.5px] leading-relaxed">
+                We focus on measurement and prediction
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════ CURRENTLY WORKING ON ════════════ -->
+      <section id="work" class="border-t hairline">
+        <div class="max-w-7xl mx-auto px-5 lg:px-10 py-24 lg:py-28">
+          <div class="flex items-end justify-between flex-wrap gap-6 mb-14">
+            <div>
+              <h2 class="display-2 max-w-2xl">Two streams of work</h2>
+            </div>
+          </div>
+
+          <div class="grid lg:grid-cols-2 gap-4">
+            <!-- Workstream 1 — Inspect Evals -->
+            <article class="card flex flex-col">
+              <h3 class="display-3 mb-6 leading-snug">Inspect Evals</h3>
+              <p class="text-[15.5px] leading-relaxed text-[var(--ink)]">
+                We are improving
+                <a
+                  class="link"
+                  href="https://github.com/UKGovernmentBEIS/inspect_evals"
+                  >Inspect Evals</a
+                >
+                to align with established best practices across other areas of
+                science — such as
+                <a class="link" href="https://www.go-fair.org/fair-principles/"
+                  >FAIR data principles</a
+                >
+                and reproducible data analysis standards (e.g.
+                <a class="link" href="https://reana.io/">CERN's REANA</a>).
+              </p>
+            </article>
+
+            <!-- Workstream 2 — Evaluation audits -->
+            <article class="card flex flex-col">
+              <h3 class="display-3 mb-6 leading-snug">Evaluation audits</h3>
+              <p class="text-[15.5px] leading-relaxed text-[var(--ink)]">
+                We're developing and validating KPIs for AI evaluations, and
+                will be reporting them publicly across new and existing
+                benchmarks.
+              </p>
+            </article>
+          </div>
+
+          <!-- Stat callout -->
+          <!-- <div
+            class="card-mint mt-6 p-8 lg:p-10 grid md:grid-cols-[auto_1fr] gap-x-10 gap-y-4 items-center"
+          >
+            <p
+              class="mono text-[var(--mint-deep)]"
+              style="
+                font-size: clamp(3rem, 6vw, 4.5rem);
+                line-height: 1;
+                letter-spacing: -0.02em;
+                font-feature-settings: &quot;tnum&quot;;
+              "
+            >
+              ~16<span class="text-[0.55em] align-top">%</span>
+            </p>
+            <div>
+              <p
+                class="text-lg lg:text-xl text-[var(--ink)] leading-snug max-w-xl"
+              >
+                of 445 LLM benchmarks used statistical tests when reporting
+                results.
+              </p>
+              <p class="text-sm text-[var(--mint-deep)] mt-3 mono">
+                — Bean et al. (2025)
+              </p>
+            </div>
+          </div>
+        </div> -->
+      </section>
+
+      <!-- ════════════ ABOUT / NAME ════════════ -->
+      <section
+        id="about"
+        class="max-w-7xl mx-auto px-5 lg:px-10 py-24 lg:py-28"
+      >
+        <h2 class="display-2 max-w-3xl mb-12">On the name</h2>
+
+        <div
+          class="max-w-3xl space-y-5 text-lg lg:text-xl leading-relaxed text-[var(--ink)]"
+        >
+          <p>
+            We take our name from a highly influential work titled
+            <a
+              class="link"
+              href="https://drive.google.com/file/d/17HbK5DxLttYZJpumJ9BHnNkb5H6YV7_8/view"
+              ><em>Tactics of Scientific Research</em></a
+            >
+            (Sidman, 1960).
+          </p>
+          <p>
+            Sidman's methods are a case study in scientific thinking and
+            strategic foresight — two principles we hope to bring to AI safety.
+          </p>
+          <p>
+            His work was instrumental in preventing a
+            <a
+              class="link"
+              href="https://en.wikipedia.org/wiki/Replication_crisis"
+              >replication crisis</a
+            >
+            in his field of behavioural analysis — a phenomenon which has since
+            undermined the broader field of psychology and many others.
+          </p>
+        </div>
+      </section>
+
+      <!-- ════════════ FAQ ════════════ -->
+      <section id="faq" class="hairline">
+        <div class="max-w-7xl mx-auto px-5 lg:px-10 py-24 lg:py-28">
+          <h2 class="display-2 max-w-2xl mb-14">
+            Things you might be wondering
+          </h2>
+
+          <dl class="max-w-3xl">
+            <div class="py-8 first:pt-0">
+              <dt>
+                <h3 class="display-3 leading-snug mb-4">
+                  Will you publish research?
+                </h3>
+              </dt>
+              <dd class="text-lg leading-relaxed text-[var(--ink)]">
+                Yes. Our research will focus on clarifying quality and
+                performance indicators for measurement and prediction, often
+                extending existing frameworks and applying them practically.
+                For example, there is significant work required to map standards
+                from the science of measurement to AI evaluation.
+              </dd>
+            </div>
+            <div class="py-8">
+              <dt>
+                <h3 class="display-3 leading-snug mb-4">
+                  Who are your main collaborators?
+                </h3>
+              </dt>
+              <dd class="text-lg leading-relaxed text-[var(--ink)]">
+                In the past we've collaborated closely with scientists and
+                engineers across the
+                <a class="link" href="https://www.aisi.gov.uk/"
+                  >UK AI Security Institute</a
+                >, <a class="link" href="https://epoch.ai/">Epoch AI</a>, and
+                <a class="link" href="https://meridianlabs.ai/">Meridian Labs</a>,
+                and will continue to work with them closely in the future.
+              </dd>
+            </div>
+            <div class="py-8 last:pb-0">
+              <dt>
+                <h3 class="display-3 leading-snug mb-4">
+                  Where is Generality Labs located?
+                </h3>
+              </dt>
+              <dd class="text-lg leading-relaxed text-[var(--ink)]">
+                We're a remote-first organisation, based in London. We're
+                incubated and sponsored by
+                <a class="link" href="https://www.arcadiaimpact.org/"
+                  >Arcadia Impact</a
+                >, a UK-based charity.
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <!-- ════════════ JOIN ════════════ -->
+      <section class="border-t hairline">
+        <div class="max-w-7xl mx-auto px-5 lg:px-10 py-24 lg:py-28">
+          <div
+            class="card-soft p-10 lg:p-16 grid lg:grid-cols-[1fr_auto] gap-10 items-center"
+          >
+            <div>
+              <h2 class="display-2 max-w-2xl mb-6">
+                Join us
+              </h2>
+              <p class="text-lg text-[var(--muted)] leading-relaxed max-w-2xl">
+                We're a group of engineers and scientists, spinning off from
+                <a class="link" href="https://www.arcadiaimpact.org/"
+                  >Arcadia Impact</a
+                >. If you're a scientist, engineer, or generalist who thinks our
+                mission is important and you have skills to bring, we invite you to
+                introduce yourself.
+              </p>
+            </div>
+            <div class="flex flex-col gap-3">
+              <a
+                href="https://forms.gle/sFLHvksmC4Bq1D556"
+                class="btn btn-mint"
+              >
+                Introduce yourself
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </a>
+              <p class="text-xs text-[var(--soft)] mono">2 minute form</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+      <div class="hairline">
+        <div
+          class="max-w-7xl mx-auto px-5 lg:px-10 py-10 flex flex-col md:flex-row justify-between gap-2 text-[12.5px] text-[var(--muted)]"
+        >
+          <span>© 2026 Generality Labs</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
