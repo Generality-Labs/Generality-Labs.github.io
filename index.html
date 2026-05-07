@@ -13,7 +13,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>
-      Generality Labs — Monitor and Accelerate the science of AI safety
+      Generality Labs - Monitor and Accelerate the science of AI safety
     </title>
     <meta
       name="description"
@@ -337,8 +337,8 @@
           <a href="#mission" class="hover:text-[var(--ink)] transition"
             >Mission</a
           >
+          <a href="#problems" class="hover:text-[var(--ink)] transition">Problems</a>
           <a href="#work" class="hover:text-[var(--ink)] transition">Work</a>
-          <a href="#about" class="hover:text-[var(--ink)] transition">About</a>
         </div>
         <a
           href="https://forms.gle/sFLHvksmC4Bq1D556"
@@ -375,7 +375,7 @@
             >
           </h1>
           <p class="mt-10 text-xl md:text-3xl max-w-7xl leading-snug">
-            Tools, evals and KPIs for faster, better AI safety research
+            Scientific software and KPIs for faster, better AI safety research
           </p>
           <!-- <div class="mt-10 flex gap-3 flex-wrap">
             <a href="#work" class="btn btn-dark">
@@ -400,59 +400,85 @@
         </div>
       </section>
 
-      <!-- ════════════ MISSION (dark band) ════════════ -->
+      <!-- ════════════ MISSION (dark cards) ════════════ -->
       <section id="mission" class="bg-[var(--ink)] text-[var(--bg)] on-dark">
         <div class="max-w-7xl mx-auto px-5 lg:px-10 py-24 lg:py-32">
-          <div class="mb-16">
-            <h2 class="display-2 max-w-7xl mb-8">
-              The science of understanding AI isn't moving fast enough. We fix this by:
+          <div class="mb-14 lg:mb-16">
+            <h2 class="display-2 max-w-5xl">
+              The science of understanding and controlling AI isn't moving fast enough
             </h2>
           </div>
 
-          <div class="grid md:grid-cols-3 gap-6 lg:gap-10">
-            <div class="pt-7">
-              <h3 class="text-xl font-medium mb-4 leading-snug">
+          <p class="text-2xl md:text-3xl leading-snug mb-10 lg:mb-12">
+            We fix this by:
+          </p>
+
+          <div class="grid md:grid-cols-3 gap-4">
+            <article class="card flex flex-col justify-start !p-10 lg:!p-12">
+              <div class="mono text-[2.125rem] md:text-[2.55rem] leading-none text-[var(--mint-deep)] tabular-nums">01</div>
+              <div class="h-px w-10 bg-[var(--mint-edge)] my-6"></div>
+              <h3 class="text-[1.3rem] md:text-[1.45rem] font-medium leading-snug text-[var(--ink)]">
                 Developing indicators of research quality & performance
               </h3>
-              <p class="text-[#A8A3A3] text-[14.5px] leading-relaxed">
-                We replicate papers, run end-to-end experiments, and validate
-                evals
-              </p>
-            </div>
-            <div class="pt-7">
-              <h3 class="text-xl font-medium mb-4 leading-snug">
+            </article>
+            <article class="card flex flex-col justify-start !p-10 lg:!p-12">
+              <div class="mono text-[2.125rem] md:text-[2.55rem] leading-none text-[var(--mint-deep)] tabular-nums">02</div>
+              <div class="h-px w-10 bg-[var(--mint-edge)] my-6"></div>
+              <h3 class="text-[1.3rem] md:text-[1.45rem] font-medium leading-snug text-[var(--ink)]">
                 Monitoring and reporting these indicators
               </h3>
-              <p class="text-[#A8A3A3] text-[14.5px] leading-relaxed">
-                We publish monthly reports keeping the community informed about
-                the rate of scientific progress
-              </p>
-            </div>
-            <div class="pt-7">
-              <h3 class="text-xl font-medium mb-4 leading-snug">
+            </article>
+            <article class="card flex flex-col justify-start !p-10 lg:!p-12">
+              <div class="mono text-[2.125rem] md:text-[2.55rem] leading-none text-[var(--mint-deep)] tabular-nums">03</div>
+              <div class="h-px w-10 bg-[var(--mint-edge)] my-6"></div>
+              <h3 class="text-[1.3rem] md:text-[1.45rem] font-medium leading-snug text-[var(--ink)]">
                 Building products that help accelerate the rate of progress
               </h3>
-              <p class="text-[#A8A3A3] text-[14.5px] leading-relaxed">
-                We focus on measurement and prediction
-              </p>
-            </div>
+            </article>
           </div>
         </div>
       </section>
 
-      <!-- ════════════ CURRENTLY WORKING ON ════════════ -->
-      <section id="work" class="border-t hairline">
-        <div class="max-w-7xl mx-auto px-5 lg:px-10 py-24 lg:py-28">
-          <div class="flex items-end justify-between flex-wrap gap-6 mb-14">
-            <div>
-              <h2 class="display-2 max-w-2xl">Two streams of work</h2>
-            </div>
+      <!-- ════════════ PROBLEMS ════════════ -->
+      <section
+        id="problems"
+        class="max-w-7xl mx-auto px-5 lg:px-10 py-24 lg:py-28"
+      >
+        <h2 class="display-2 max-w-2xl mb-14">Problems we'd like to solve</h2>
+
+        <ul class="max-w-3xl space-y-7 text-xl lg:text-2xl leading-relaxed text-[var(--ink)]">
+          <li class="flex gap-5">
+            <span class="w-2 h-2 rounded-full bg-[var(--mint-deep)] mt-[0.7em] flex-shrink-0"></span>
+            <p>
+              <span class="font-medium">Evaluations:</span> Open-source benchmarks are (too often) broken, contaminated, saturated, difficult to run, and/or poorly documented
+            </p>
+          </li>
+          <li class="flex gap-5">
+            <span class="w-2 h-2 rounded-full bg-[var(--mint-deep)] mt-[0.7em] flex-shrink-0"></span>
+            <p>
+              <span class="font-medium">Data:</span> Experimental data (e.g. eval logs) are rarely shared or reused
+            </p>
+          </li>
+          <li class="flex gap-5">
+            <span class="w-2 h-2 rounded-full bg-[var(--mint-deep)] mt-[0.7em] flex-shrink-0"></span>
+            <p>
+              <span class="font-medium">Experiments:</span> experiments aren't updated or extended with new models or eval settings to test generalisation and prediction accuracy
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ════════════ CURRENT PROJECTS (dark) ════════════ -->
+      <section id="work" class="bg-[var(--ink)] text-[var(--bg)]">
+        <div class="max-w-7xl mx-auto px-5 lg:px-10 py-24 lg:py-32">
+          <div class="mb-14 lg:mb-16">
+            <h2 class="display-2 max-w-2xl">Current projects</h2>
           </div>
 
           <div class="grid lg:grid-cols-2 gap-4">
-            <!-- Workstream 1 — Inspect Evals -->
+            <!-- Workstream 1 - Inspect Evals -->
             <article class="card flex flex-col">
-              <h3 class="display-3 mb-6 leading-snug">Inspect Evals</h3>
+              <h3 class="display-3 mb-6 leading-snug text-[var(--ink)]">Inspect Evals</h3>
               <p class="text-[15.5px] leading-relaxed text-[var(--ink)]">
                 We are improving
                 <a
@@ -461,7 +487,7 @@
                   >Inspect Evals</a
                 >
                 to align with established best practices across other areas of
-                science — such as
+                science - such as
                 <a class="link" href="https://www.go-fair.org/fair-principles/"
                   >FAIR data principles</a
                 >
@@ -470,9 +496,9 @@
               </p>
             </article>
 
-            <!-- Workstream 2 — Evaluation audits -->
+            <!-- Workstream 2 - Evaluation audits -->
             <article class="card flex flex-col">
-              <h3 class="display-3 mb-6 leading-snug">Evaluation audits</h3>
+              <h3 class="display-3 mb-6 leading-snug text-[var(--ink)]">Evaluation audits</h3>
               <p class="text-[15.5px] leading-relaxed text-[var(--ink)]">
                 We're developing and validating KPIs for AI evaluations, and
                 will be reporting them publicly across new and existing
@@ -504,47 +530,11 @@
                 results.
               </p>
               <p class="text-sm text-[var(--mint-deep)] mt-3 mono">
-                — Bean et al. (2025)
+                - Bean et al. (2025)
               </p>
             </div>
           </div>
         </div> -->
-      </section>
-
-      <!-- ════════════ ABOUT / NAME ════════════ -->
-      <section
-        id="about"
-        class="max-w-7xl mx-auto px-5 lg:px-10 py-24 lg:py-28"
-      >
-        <h2 class="display-2 max-w-3xl mb-12">On the name</h2>
-
-        <div
-          class="max-w-3xl space-y-5 text-lg lg:text-xl leading-relaxed text-[var(--ink)]"
-        >
-          <p>
-            We take our name from a highly influential work titled
-            <a
-              class="link"
-              href="https://drive.google.com/file/d/17HbK5DxLttYZJpumJ9BHnNkb5H6YV7_8/view"
-              ><em>Tactics of Scientific Research</em></a
-            >
-            (Sidman, 1960).
-          </p>
-          <p>
-            Sidman's methods are a case study in scientific thinking and
-            strategic foresight — two principles we hope to bring to AI safety.
-          </p>
-          <p>
-            His work was instrumental in preventing a
-            <a
-              class="link"
-              href="https://en.wikipedia.org/wiki/Replication_crisis"
-              >replication crisis</a
-            >
-            in his field of behavioural analysis — a phenomenon which has since
-            undermined the broader field of psychology and many others.
-          </p>
-        </div>
       </section>
 
       <!-- ════════════ FAQ ════════════ -->
