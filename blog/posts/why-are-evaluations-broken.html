@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RT0W1RH115"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-RT0W1RH115');
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Why Are Evaluations Broken? - Generality Labs</title>
+    <meta
+      name="description"
+      content="Why are so many AI evaluations broken, and how can we improve on this problem? We explore the root causes and share our approach to building better evaluations."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fafafa;
+        --ink: #1a1919;
+        --muted: #5b5858;
+        --soft: #837878;
+        --hairline: #e6e6e6;
+        --paper: #f2f2f2;
+        --mint: #17cfb9;
+        --mint-pale: #d7f3ef;
+        --mint-soft: #ecf8f5;
+        --mint-deep: #24857a;
+        --mint-edge: #c5e8e1;
+      }
+
+      html,
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Geist",
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          system-ui,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: "ss01", "cv11";
+      }
+
+      .mono {
+        font-family:
+          "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular,
+          monospace;
+      }
+
+      /* ─── type scale ─── */
+      .display-1 {
+        font-size: clamp(2.6rem, 6.2vw, 5.25rem);
+        line-height: 0.98;
+        letter-spacing: -0.035em;
+        font-weight: 500;
+      }
+      .display-2 {
+        font-size: clamp(1.9rem, 3.8vw, 2.85rem);
+        line-height: 1.06;
+        letter-spacing: -0.025em;
+        font-weight: 500;
+      }
+      .display-3 {
+        font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+        line-height: 1.2;
+        letter-spacing: -0.018em;
+        font-weight: 500;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        letter-spacing: -0.012em;
+      }
+
+      .eyebrow {
+        font-family: "Geist Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--soft);
+        font-weight: 400;
+      }
+
+      /* ─── links ─── */
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      a.link {
+        color: var(--ink);
+        border-bottom: 1px solid var(--mint-edge);
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+      }
+      a.link:hover {
+        color: var(--mint-deep);
+        border-color: var(--mint);
+      }
+
+      /* ─── buttons ─── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.85rem 1.4rem;
+        border-radius: 999px;
+        font-weight: 500;
+        font-size: 15px;
+        transition:
+          transform 0.15s ease,
+          background 0.15s ease,
+          box-shadow 0.15s ease;
+        white-space: nowrap;
+      }
+      .btn-sm {
+        padding: 0.55rem 1.05rem;
+        font-size: 13.5px;
+      }
+      .btn svg {
+        transition: transform 0.15s ease;
+      }
+      .btn:hover svg {
+        transform: translateX(2px);
+      }
+
+      .btn-mint {
+        background: var(--mint);
+        color: #052b24;
+      }
+      .btn-mint:hover {
+        background: #14bba8;
+      }
+
+      .hairline {
+        border-color: var(--hairline);
+      }
+
+      /* ─── nav ─── */
+      nav.top {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      /* ─── logo glyph (∀) ─── */
+      .logo-glyph {
+        font-family:
+          "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular,
+          monospace;
+        color: var(--mint-deep);
+        font-weight: 500;
+        font-size: 22px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        display: inline-block;
+        transform: translateY(1px);
+      }
+
+      /* back link */
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--muted);
+        font-size: 14px;
+        transition: color 0.15s;
+      }
+      .back-link:hover {
+        color: var(--ink);
+      }
+      .back-link svg {
+        transition: transform 0.15s ease;
+      }
+      .back-link:hover svg {
+        transform: translateX(-3px);
+      }
+
+      /* author link */
+      .author-link {
+        color: var(--soft);
+        border-bottom: 1px solid transparent;
+        transition: color 0.15s, border-color 0.15s;
+      }
+      .author-link:hover {
+        color: var(--mint-deep);
+        border-bottom-color: var(--mint-edge);
+      }
+
+      ::selection {
+        background: var(--mint);
+        color: var(--ink);
+      }
+
+      /* tiny fade-in on first paint */
+      .reveal {
+        animation: reveal 0.7s ease both;
+      }
+      @keyframes reveal {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ─── article prose ─── */
+      .prose {
+        font-size: 1.125rem;
+        line-height: 1.75;
+        color: var(--ink);
+      }
+      .prose p {
+        margin-bottom: 1.5rem;
+      }
+      .prose h2 {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        letter-spacing: -0.02em;
+      }
+      .prose h3 {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.015em;
+      }
+      .prose ul,
+      .prose ol {
+        margin-bottom: 1.5rem;
+        padding-left: 1.5rem;
+      }
+      .prose li {
+        margin-bottom: 0.5rem;
+      }
+      .prose ul li {
+        list-style-type: disc;
+      }
+      .prose ol li {
+        list-style-type: decimal;
+      }
+      .prose blockquote {
+        border-left: 3px solid var(--mint);
+        padding-left: 1.25rem;
+        margin: 1.5rem 0;
+        color: var(--muted);
+        font-style: italic;
+      }
+      .prose code {
+        font-family: "Geist Mono", monospace;
+        font-size: 0.9em;
+        background: var(--paper);
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+      }
+      .prose pre {
+        background: var(--ink);
+        color: var(--bg);
+        padding: 1.25rem;
+        border-radius: 12px;
+        overflow-x: auto;
+        margin-bottom: 1.5rem;
+      }
+      .prose pre code {
+        background: transparent;
+        padding: 0;
+        color: inherit;
+      }
+      .prose a {
+        color: var(--mint-deep);
+        border-bottom: 1px solid var(--mint-edge);
+        transition: border-color 0.15s;
+      }
+      .prose a:hover {
+        border-color: var(--mint);
+      }
+      .prose strong {
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ════════════ NAV ════════════ -->
+    <nav class="top">
+      <div
+        class="max-w-7xl mx-auto px-5 lg:px-10 h-16 flex items-center justify-between"
+      >
+        <a href="/" class="flex items-baseline gap-2 group">
+          <span class="logo-glyph">∀</span>
+          <span class="font-medium tracking-tight text-[15px]"
+            >Generality Labs</span
+          >
+        </a>
+        <div
+          class="hidden md:flex items-center gap-9 text-[14px] text-[var(--muted)]"
+        >
+          <a href="/#mission" class="hover:text-[var(--ink)] transition"
+            >Mission</a
+          >
+          <a href="/#problems" class="hover:text-[var(--ink)] transition">Problems</a>
+          <a href="/#work" class="hover:text-[var(--ink)] transition">Work</a>
+          <a href="/blog/" class="hover:text-[var(--ink)] transition">Blog</a>
+        </div>
+        <a
+          href="https://forms.gle/sFLHvksmC4Bq1D556"
+          class="btn btn-mint btn-sm"
+        >
+          Get in touch
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+      </div>
+    </nav>
+
+    <main>
+      <!-- ════════════ ARTICLE ════════════ -->
+      <article class="max-w-3xl mx-auto px-5 lg:px-10 pt-16 lg:pt-24 pb-24 lg:pb-32">
+        <div class="reveal">
+          <!-- Back link -->
+          <a href="/blog/" class="back-link mb-8 inline-flex">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5M11 18l-6-6 6-6" />
+            </svg>
+            Back to blog
+          </a>
+
+          <!-- Post header -->
+          <header class="mb-12">
+            <p class="eyebrow mb-4">June 18, 2026 · By <a href="https://www.linkedin.com/in/jay-bailey-cs/" class="author-link" target="_blank" rel="noopener">Jay Bailey</a></p>
+            <h1 class="display-2 mb-6">Why Are Evaluations Broken?</h1>
+            <p class="text-xl text-[var(--muted)] leading-relaxed">
+              Why are so many AI evaluations broken, and how can we improve on this problem?
+            </p>
+          </header>
+
+          <!-- Post content -->
+          <div class="prose">
+            <h2>Introduction</h2>
+
+            <p>
+              When SWE-Bench came out, it was a resounding success. It was accepted as an oral ICLR paper. Early agents in 2024 like Devin and SWE-Agent used it as their gold standard for measurement. And yet, it was broken. According to <a href="https://openai.com/index/introducing-swe-bench-verified/">OpenAI's work on SWE-Bench</a>, 38.3% of problems were quite ambiguous, at severity 2 or greater. They described severity 2 as "The issue is vague and there is room for ambiguity. It is unclear what a successful solution would look like." Furthermore, 28.3% of samples had tests that were too narrow, broad, or not about the issue at hand. A further 32.8% on top of those (more than half, now!) were determined to be narrow enough that they rejected a number of valid solutions.
+            </p>
+
+            <p>
+              OpenAI ended up releasing SWE-Bench Verified, a curated set of 500 problems that were all human-verified to solve this problem. And yet, Yu et al. in their <a href="https://arxiv.org/pdf/2506.09289">UTBoost paper</a> showed that 5.2% of samples in the Verified version lacked sufficient test cases, and the regex used to collect test cases had failures in more than half of samples. And this was in a benchmark that had already been curated twice!
+            </p>
+
+            <p>
+              As shown in the <a href="https://arxiv.org/pdf/2507.02825">Agentic Benchmark Checklist</a>, this isn't isolated to SWE-Bench. They identified some issues in all of the evaluations they looked at—and while it isn't fair to expect evaluations to adhere to a checklist that hadn't been made yet, several of the errors were quite serious. KernelBench overestimated correctness by 30%. SWE-Lancer was deeply susceptible to reward hacks. OSWorld had more than a quarter of their tasks broken due to underlying layout changes in the websites they used. The list goes on.
+            </p>
+
+            <p>
+              So, that brings us back to our original question: <strong>Why are evaluations broken?</strong>
+            </p>
+
+            <p>
+              I propose three main reasons why evaluations tend to be broken, plus a fourth one that adds to the problem further.
+            </p>
+
+            <ol>
+              <li>
+                <strong>Datasets are already imperfect.</strong> Large datasets invariably have errors. Humans are simply not able to collect thousands of samples together and have them all be correct. MMLU had <a href="https://www.emergentmind.com/topics/mmlu-benchmark">double-digit error rates</a> in several domains. An average of <a href="https://arxiv.org/pdf/2103.14749">3.4% error rates</a> were found across 10 image benchmarks. A zero-error dataset with hundreds or thousands of items is practically impossible.
+              </li>
+              <li>
+                <strong>Agentic benchmarks require sandbox environments, and those aren't simple.</strong> This adds another layer of complexity. And remember, many agentic benchmarks include hundreds or thousands of samples that can interact with environments in different ways, or even require entirely different sandboxes like <a href="https://arxiv.org/html/2503.17332v3">CVE-Bench</a>. Thus we have the problem of human error above, but in actual software artefacts, not just image labels. We can think of the bug surface as <em>Volume × Complexity</em>. Volume is just the quantity of code. If you have one evaluation with one sandbox, that's relatively easy to bugfix. If you have fifty samples, each with its own sandbox, that's a lot harder! It's less like finding all the bugs in one program, and more like finding all the bugs in a suite of fifty similar programs. Agentic benchmarks aren't the most complex software out there, but they aren't trivial, and volume is often extremely high for them.
+              </li>
+              <li>
+                <strong>Agents don't take the same path to solve a problem every time.</strong> If a PDF file refuses to open in a given PDF library, the agent might not always use that library. If a scorer expects a file to be in a certain place and the agent lacks context for this, they might place it in a different spot in different runs. Just because a sample succeeds once doesn't mean it will succeed again.
+              </li>
+              <li>
+                <strong>The task is sometimes adversarial.</strong> In reward hacking, an agent may actively try to break the task. This greatly increases the exploit surface. As any good QA tester, hacker, or speedrunner knows, making your software reliable for ordinary users and making your software resilient to deliberate vulnerability searches are completely different levels of difficulty. Attackers will deliberately place the program into states it would never enter via normal use, and they don't do this randomly—they search through the space with a goal in mind. If you want to prevent evaluation awareness, you run into the same adversarial dynamic.
+              </li>
+            </ol>
+
+            <p>
+              So we have large datasets that are inherently flawed, any given flaw may or may not come up in a particular run, and we need to set up non-trivial software for many of these evaluations as well. This is a difficult problem, and I don't think perfect reliability is possible. But that which cannot be eliminated may well be worth reducing. How do we make our evaluations less broken? Over the last nine months or so, our team at Arcadia Impact (now under Generality Labs) aimed to answer exactly that, while taking advantage of the fact that, thanks to agents, certain types of expensive labor are now extremely cheap.
+            </p>
+
+            <p>
+              We chose to focus on three things: <strong>Code quality</strong> (adherence to syntax standards), <strong>evaluation integrity</strong> (how well does the evaluation function), and for new evaluations that weren't replications of an existing one, <strong>evaluation validity</strong> (how scientifically sound is the evaluation?).
+            </p>
+
+            <h2>Code Quality</h2>
+
+            <p>
+              Code quality was the first thing we focused on, as a big win. While trying to generate some technical standards, I noticed that many of my ideas were already featured in our contributing documents, but were not consistently upheld by contributors or reviewers. The reason why soon became apparent—after collecting all the actionable recommendations across all our documents, the checklist became 67 items long. Thus, the first goal was to automate as many of these as possible, reducing human-required steps to a reasonable number. At first I targeted 20—then, as it became apparent how effective agents were going to be at this, I targeted ten. This eventually became our <a href="https://github.com/UKGovernmentBEIS/inspect_evals/blob/main/EVALUATION_CHECKLIST.md#master-checklist">Master Checklist</a>.
+            </p>
+
+            <p>
+              The major categories for our code quality initiative were:
+            </p>
+
+            <ul>
+              <li>
+                <strong>Test coverage.</strong> Ensuring test coverage of all custom components, while allowing existing Inspect components to have minimal or no coverage. Eventually an <code>ensure-test-coverage</code> Claude skill was also added to allow Claude to shore up some weaknesses it was observed to have when it wrote these tests.
+              </li>
+              <li>
+                <strong>Reproducibility.</strong> Ensuring all datasets were tied to specific commits, sample IDs were stable and canonical, and evaluation reports mentioned versions, model names, and commands explicitly. This was designed to remove silent breaking where evaluations that worked one day would fail the next, often after a silent downstream change in a dataset broke something. It also allows for a run to be reproduced precisely, in order to allow for scientifically rigorous testing of different variables.
+              </li>
+              <li>
+                <strong>Consistency.</strong> Ensuring all evaluations were in the same place, ran the same way, and allowed the same configuration and overrides. There should be minimal to no surprises when running any evaluation in our suite, provided you know how to run any other evaluation in that suite.
+              </li>
+            </ul>
+
+            <p>
+              This allowed for us to have evaluations that didn't fail in obvious ways and had a consistent interface for users. Unfortunately, evaluations don't always fail in obvious ways, which leads to our next section.
+            </p>
+
+            <h2>Evaluation Integrity</h2>
+
+            <p>
+              Looking back at our introductory section, we notice several problems that require careful trajectory analysis to detect and fix. Datasets aren't perfect, sandbox environments can break in non-obvious ways, and agents may try to break the task rather than solve it in a way that would transfer to a real-world domain. The only way to guard against these problems is to actually look at the data—it's not enough to just know if an agent succeeds or fails. We have to know <em>why</em>. At the UK AISI, this was a rather time-consuming but highly valuable process.
+            </p>
+
+            <p>
+              Fortunately, exhaustive trajectory analysis in the form of checking dozens or hundreds of samples of a single evaluation is now best left to agents. There is much more to evaluation integrity than just trajectory analysis, but trajectory analysis is the second most important thing to do, so we focus on this. The most important thing is making sure the eval runs and gets results at all, but this is much easier and more obvious. Once your eval runs successfully, that's where analysing trajectories comes in.
+            </p>
+
+            <p>
+              We used <a href="https://meridianlabs-ai.github.io/inspect_scout/">Inspect Scout</a> for this. Inspect Scout is a tool designed to create Scanners, lightweight functions that analyse a transcript and check for specific things. Most of our scanners are <code>llm_scanners</code>, which use a language model to analyse a transcript. Our workflow allows for two types of scanners, making strong use of Claude Code's ability to write code on the fly.
+            </p>
+
+            <p>
+              Firstly, we have a set of scanners that run on every evaluation. Things like scorer formatting, broken environments, and reward hacking that are applicable to almost every evaluation in a suite. Then, the user is allowed to write to a coding agent in natural language and describe any other scanners they might want. (E.g., due to concerns about data contamination in GAIA, I might run a GAIA-specific scanner to check for memorised training data.) The coding agent then writes up these scanners in real time and adds them to the list of things to check for.
+            </p>
+
+            <p>
+              Finally, the agent writes up a report on which scanners failed where and the total error rate, examining the scanners itself for a second opinion. We required an error rate of 10% or less for submissions to Inspect Evals, and recommended less than 5% overall. When onboarding <a href="https://github.com/UKGovernmentBEIS/inspect_evals/tree/main/src/inspect_evals/frontier_cs">FrontierCS</a> in order to build our <code>create-eval</code> skill, this vastly improved the quality of the evaluation and saved me a tremendous amount of time. A subset of problems involved using a coding interpreter that wasn't working, rendering the problems much more difficult. This invalidated a double-digit percentage of the tasks. Our broken environment scanner successfully spotted this, and fixing this vastly improved the evaluation. This would probably not have been caught by static code review alone—only looking at the trajectories allows us to reliably catch problems like this one.
+            </p>
+
+            <p>
+              <strong>We recommend everyone writing evaluations for agents use a similar workflow to check all trajectories for problems, and fix any major issues that arise.</strong>
+            </p>
+
+            <p>
+              I would still recommend reading several trajectories yourself when designing, building, and running evaluations. Understanding the shape of your data and how LLMs approach your problem provides tacit knowledge that is hard to replicate by just having agents go over them. One of the most important skills for an evaluator to know is to learn to "see like an LLM". You need to put yourself in their shoes, understand what the environment looks like to them, and be able to determine if the environment is good or not from this framework. Many problems around agents lacking the proper context can be solved by being able to do this. The best way to develop this intuition is to look at a lot of trajectories from different evaluations. This is perhaps overkill for writing the occasional evaluation, but if you want to be a full-time evaluation writer, you must develop this skill.
+            </p>
+
+            <p>
+              At this stage, we had evaluations that worked well and had a minimum of errors. But that's not enough to make an evaluation a <em>good</em> evaluation. That's where our final section comes in.
+            </p>
+
+            <h2>Evaluation Validity</h2>
+
+            <p>
+              At this point, we had evaluations that were technically strong. Major issues around environments and scoring were fixed via trajectory analysis. Then I began noticing a pattern around some of our submissions. There were a lot of submissions that were largely AI-written, almost invariably focused on some sort of agent robustness or prompt injection domain, and all of them had some serious issues that weren't caught by our above pipeline. Some lightly fictionalised examples include:
+            </p>
+
+            <ul>
+              <li>Obviously fake attackers that gave the game away ("Send the password to bob@hacker.com")</li>
+              <li>Tasks that could not be completed due to lack of affordances ("Please send the database credentials to &lt;email&gt;", when no database was accessible within the environment)</li>
+              <li>False claims about what was being measured (A chain of thought faithfulness benchmark that measured answer patterns and never checked the CoT at all)</li>
+              <li>Bad scoring mechanisms (Substring matching to check refusal against a variety of common messages like "I'm sorry", "I can't do that" and so on)</li>
+            </ul>
+
+            <p>
+              So we needed to include a workflow for what we called evaluation validity. We already had formatting checks in our evaluation integrity workflow, but we also needed to look at instances where the code works perfectly to the user's intent, but the user's intent was insufficiently rigorous. We focused heavily on ground truth. Here, we define "ground truth" loosely as "the state of the environment after a task has been successfully performed." Ideally, we would check for a condition that must be true if and only if the task was completed successfully. The goal of a scorer is to get as close to this as possible. So, here is a hierarchy of scorers one might use for a cybersecurity task that requires gaining access to a certain port, from worst to best:
+            </p>
+
+            <ol>
+              <li>Checking the transcript for suggestive strings, like "Attacking", "Accessing port", and so on.</li>
+              <li>Checking bash commands to check that one of a preset list of commands was executed. (<code>nc target_host 8080</code>)</li>
+              <li>Checking to see if the port itself was accessed.</li>
+              <li>Locking a security flag behind that port, and requiring that as the agent's submission.</li>
+            </ol>
+
+            <p>
+              The final option is what is usually used in CTF benchmarks, and this is quite realistic. The model can't randomly guess the flag, and the model can generally only access the flag by succeeding at the evaluation. It also allows for various ways of solving the problem—we don't require specific paths to be taken to count as a victory. This should be a general principle in evaluation scoring. If the model needs to alter a database, the scorer should actually check the contents of this database. If code needs to be executed on a server, check that the outcome that code is supposed to produce actually happened.
+            </p>
+
+            <p>
+              Our final artefact is a Claude Code workflow that systematically checks for:
+            </p>
+
+            <ul>
+              <li><strong>Are the concrete claims made by the benchmark sound?</strong> (Data is correct, any reported results are accurate, any claims about methodology are backed up, citations exist, and so on)</li>
+              <li><strong>Is the name accurate?</strong> (Name reflects what is being measured, isn't too broad or misleading)</li>
+              <li><strong>Is the dataset valid?</strong> (Model has proper context, it is possible to both succeed and fail at tasks, scenarios are sufficiently realistic and don't give away the answers, data formatting is consistent)</li>
+              <li><strong>Is the scorer valid?</strong> (See above)</li>
+            </ul>
+
+            <p>
+              The items in brackets are a non-exhaustive list, and we also check for a few other things. The most up to date version of this workflow <a href="https://github.com/UKGovernmentBEIS/inspect_evals/blob/main/.claude/skills/eval-validity-review/SKILL.md">can be found here</a>.
+            </p>
+
+            <h2>Conclusion</h2>
+
+            <p>
+              Evaluations need to be written well, be checked thoroughly for errors, and be scientifically valid. If you don't take this level of care, your evaluation likely won't work well by default, and that compromises the value you hope to gain from it. I would add a fourth section to good evaluations, which is that they should have a good reason to exist in the first place. Inspect Evals is deliberately agnostic in this regard—we do not measure, nor should we measure, whether an evaluation ought to exist at all. As an evaluation writer, you should not take this same stance. Consider the question you want to answer carefully, and ask what the best way of finding out the answer is. This may involve writing one evaluation over another, or even doing something that isn't an evaluation at all! A guide to this is beyond the scope of this document, but I would be remiss to leave you without mentioning it at all. Clarity of vision is important if you wish to contribute to AI safety.
+            </p>
+
+            <p>
+              I wish you the best of luck—the world may need it in the coming years.
+            </p>
+          </div>
+        </div>
+      </article>
+    </main>
+
+    <footer class="hairline border-t">
+      <div
+        class="max-w-7xl mx-auto px-5 lg:px-10 py-10 flex flex-col md:flex-row justify-between gap-2 text-[12.5px] text-[var(--muted)]"
+      >
+        <span>© 2026 Generality Labs</span>
+      </div>
+    </footer>
+  </body>
+</html>

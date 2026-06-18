@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RT0W1RH115"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-RT0W1RH115');
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blog - Generality Labs</title>
+    <meta
+      name="description"
+      content="Latest updates and insights from Generality Labs on AI safety research."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fafafa;
+        --ink: #1a1919;
+        --muted: #5b5858;
+        --soft: #837878;
+        --hairline: #e6e6e6;
+        --paper: #f2f2f2;
+        --mint: #17cfb9;
+        --mint-pale: #d7f3ef;
+        --mint-soft: #ecf8f5;
+        --mint-deep: #24857a;
+        --mint-edge: #c5e8e1;
+      }
+
+      html,
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Geist",
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          system-ui,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: "ss01", "cv11";
+      }
+
+      .mono {
+        font-family:
+          "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular,
+          monospace;
+      }
+
+      /* ─── type scale ─── */
+      .display-1 {
+        font-size: clamp(2.6rem, 6.2vw, 5.25rem);
+        line-height: 0.98;
+        letter-spacing: -0.035em;
+        font-weight: 500;
+      }
+      .display-2 {
+        font-size: clamp(1.9rem, 3.8vw, 2.85rem);
+        line-height: 1.06;
+        letter-spacing: -0.025em;
+        font-weight: 500;
+      }
+      .display-3 {
+        font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+        line-height: 1.2;
+        letter-spacing: -0.018em;
+        font-weight: 500;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        letter-spacing: -0.012em;
+      }
+
+      .eyebrow {
+        font-family: "Geist Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--soft);
+        font-weight: 400;
+      }
+
+      /* ─── links ─── */
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      a.link {
+        color: var(--ink);
+        border-bottom: 1px solid var(--mint-edge);
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+      }
+      a.link:hover {
+        color: var(--mint-deep);
+        border-color: var(--mint);
+      }
+
+      /* ─── buttons ─── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.85rem 1.4rem;
+        border-radius: 999px;
+        font-weight: 500;
+        font-size: 15px;
+        transition:
+          transform 0.15s ease,
+          background 0.15s ease,
+          box-shadow 0.15s ease;
+        white-space: nowrap;
+      }
+      .btn-sm {
+        padding: 0.55rem 1.05rem;
+        font-size: 13.5px;
+      }
+      .btn svg {
+        transition: transform 0.15s ease;
+      }
+      .btn:hover svg {
+        transform: translateX(2px);
+      }
+
+      .btn-mint {
+        background: var(--mint);
+        color: #052b24;
+      }
+      .btn-mint:hover {
+        background: #14bba8;
+      }
+
+      /* ─── cards ─── */
+      .card {
+        background: #ffffff;
+        border: 1px solid var(--hairline);
+        border-radius: 22px;
+        padding: 2rem;
+        transition:
+          border-color 0.2s,
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .card:hover {
+        border-color: #cbcbcb;
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.02),
+          0 12px 30px -22px rgba(0, 0, 0, 0.12);
+      }
+
+      .hairline {
+        border-color: var(--hairline);
+      }
+
+      /* ─── nav ─── */
+      nav.top {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      /* ─── logo glyph (∀) ─── */
+      .logo-glyph {
+        font-family:
+          "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular,
+          monospace;
+        color: var(--mint-deep);
+        font-weight: 500;
+        font-size: 22px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        display: inline-block;
+        transform: translateY(1px);
+      }
+
+      /* arrow link */
+      .arrow-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--mint-deep);
+        font-weight: 500;
+        font-size: 14px;
+      }
+      .arrow-link svg {
+        transition: transform 0.15s ease;
+      }
+      .arrow-link:hover svg {
+        transform: translateX(3px);
+      }
+
+      ::selection {
+        background: var(--mint);
+        color: var(--ink);
+      }
+
+      /* tiny fade-in on first paint */
+      .reveal {
+        animation: reveal 0.7s ease both;
+      }
+      @keyframes reveal {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Blog post card hover */
+      .post-card {
+        display: block;
+      }
+      .post-card:hover h3 {
+        color: var(--mint-deep);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ════════════ NAV ════════════ -->
+    <nav class="top">
+      <div
+        class="max-w-7xl mx-auto px-5 lg:px-10 h-16 flex items-center justify-between"
+      >
+        <a href="/" class="flex items-baseline gap-2 group">
+          <span class="logo-glyph">∀</span>
+          <span class="font-medium tracking-tight text-[15px]"
+            >Generality Labs</span
+          >
+        </a>
+        <div
+          class="hidden md:flex items-center gap-9 text-[14px] text-[var(--muted)]"
+        >
+          <a href="/#mission" class="hover:text-[var(--ink)] transition"
+            >Mission</a
+          >
+          <a href="/#problems" class="hover:text-[var(--ink)] transition">Problems</a>
+          <a href="/#work" class="hover:text-[var(--ink)] transition">Work</a>
+          <a href="/blog/" class="text-[var(--ink)]">Blog</a>
+        </div>
+        <a
+          href="https://forms.gle/sFLHvksmC4Bq1D556"
+          class="btn btn-mint btn-sm"
+        >
+          Get in touch
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+      </div>
+    </nav>
+
+    <main>
+      <!-- ════════════ BLOG HEADER ════════════ -->
+      <section
+        class="max-w-7xl mx-auto px-5 lg:px-10 pt-20 lg:pt-28 pb-16"
+      >
+        <div class="reveal">
+          <h1 class="display-2">Blog</h1>
+        </div>
+      </section>
+
+      <!-- ════════════ BLOG POSTS ════════════ -->
+      <section class="max-w-7xl mx-auto px-5 lg:px-10 pb-24 lg:pb-32">
+        <div class="grid gap-6 max-w-3xl">
+
+          <!-- Post 1 -->
+          <a href="/blog/posts/why-are-evaluations-broken.html" class="post-card card !p-8">
+            <p class="eyebrow mb-3">June 2026 · By Jay Bailey</p>
+            <h3 class="display-3 mb-3 transition-colors">Why Are Evaluations Broken?</h3>
+            <p class="text-[var(--muted)] leading-relaxed">
+              Why are so many AI evaluations broken, and how can we improve on this problem? We explore the root causes and share our approach to building better evaluations.
+            </p>
+            <span class="arrow-link mt-4">
+              Read more
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
+          </a>
+
+        </div>
+      </section>
+    </main>
+
+    <footer class="hairline border-t">
+      <div
+        class="max-w-7xl mx-auto px-5 lg:px-10 py-10 flex flex-col md:flex-row justify-between gap-2 text-[12.5px] text-[var(--muted)]"
+      >
+        <span>© 2026 Generality Labs</span>
+      </div>
+    </footer>
+  </body>
+</html>
