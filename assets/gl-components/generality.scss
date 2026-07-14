@@ -1,0 +1,53 @@
+/*-- scss:defaults --*/
+// Match generality.org index.html design tokens
+$body-bg: #fafafa;
+$body-color: #1a1919;
+$link-color: #24857a;
+$font-family-sans-serif: "Geist", "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+$font-family-monospace: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+$headings-font-weight: 600;
+$toc-color: #5b5858;
+
+/*-- scss:rules --*/
+:root {
+  --bg: #fafafa; --ink: #1a1919; --muted: #5b5858; --soft: #837878;
+  --hairline: #e6e6e6; --paper: #f2f2f2;
+  --mint: #17cfb9; --mint-pale: #d7f3ef; --mint-soft: #ecf8f5;
+  --mint-deep: #24857a; --mint-edge: #c5e8e1;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+
+.quarto-title-block .quarto-title h1.title {
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 0.3rem;
+  margin-top: 2.4rem;
+  letter-spacing: -0.01em;
+}
+
+blockquote {
+  border-left: 3px solid var(--mint);
+  background: var(--mint-soft);
+  padding: 0.6rem 1rem;
+  color: var(--ink);
+  font-size: 0.95rem;
+  border-radius: 0 6px 6px 0;
+}
+
+figure img {
+  max-width: 100%;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+}
+
+.callout-note {
+  border-left-color: var(--mint) !important;
+}

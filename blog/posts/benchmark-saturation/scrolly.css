@@ -1,0 +1,61 @@
+/* gl-scrolly: two-panel layout, activated by scrolly.js on wide viewports */
+
+/* article hidden until scrolly.js has applied the layout (it reveals it),
+   so the two-panel restructure never flashes the single-column layout */
+main article { visibility: hidden; }
+
+body.gl-scrolly article header {
+  max-width: 46rem;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  margin-bottom: 5rem;
+}
+body.gl-scrolly .prose { position: relative; }
+body.gl-scrolly .prose > *:not(.gl-scrolly-rail) { max-width: 30rem; }
+.gl-scrolly-rail { position: absolute; top: 0; bottom: 0; left: 33rem; right: 0; }
+.gl-scrolly-sticky { position: sticky; top: 8.5rem; height: calc(100vh - 10rem); }
+.gl-scrolly-sticky .cell {
+  position: absolute; inset: 0; margin: 0;
+  display: flex; align-items: flex-start; justify-content: center;
+  opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  overflow: visible; /* never a scrollbar: figures scale to fit instead */
+}
+.gl-scrolly-sticky .cell svg {
+  max-height: calc(100vh - 18rem); /* leave room for title + legend */
+  width: auto; height: auto;
+}
+.gl-scrolly-sticky .cell.active { opacity: 1; }
+/* the rail and cells are click-transparent; only the visible figure itself
+   takes the pointer, so text that runs underneath stays clickable */
+.gl-scrolly-rail, .gl-scrolly-sticky { pointer-events: none; }
+.gl-scrolly-sticky .cell.active figure { pointer-events: auto; }
+.gl-scrolly-sticky .cell > .cell-output-display { width: 100%; }
+.gl-scrolly-step { height: 1px; }
+
+/* figures were built for a centred single column; in the rail their
+   breakout width/transform is neutralised and svgs fit the panel —
+   as CSS so there is no post-render snap */
+.gl-scrolly-sticky .cell figure {
+  margin-top: 0;
+  width: min(100%, 60rem) !important; /* cap: don't balloon on very wide windows */
+  margin-left: auto;
+  margin-right: auto;
+  left: 0 !important;
+  transform: none !important;
+}
+.gl-scrolly-sticky .cell svg { max-width: 100%; height: auto; }
+
+/* inline controls sit tight under their paragraph */
+.cell.gl-inline { margin: 0.4rem 0 1rem; }
+
+/* in-flow figures (not lifted into the rail): clamp the breakout width to
+   the column and kill quarto's overflow-x:auto — never a scrollbar */
+body.gl-scrolly .prose .cell-output-display { overflow-x: visible; }
+body.gl-scrolly .prose .cell figure { max-width: 100%; }
+
+/* once the figure sections are done (everything after the inline control),
+   the TEXT runs the full width of the page again */
+body.gl-scrolly .prose > .cell.gl-inline ~ :is(p, h1, h2, h3, h4, ul, ol, blockquote, .cell) {
+  max-width: none;
+}
