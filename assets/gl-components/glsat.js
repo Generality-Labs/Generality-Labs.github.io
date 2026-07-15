@@ -2381,9 +2381,9 @@ export function glRliScatter({ Plot }, rows, spec = {}) {
       ...(spec.trajectories ?? []).map((cur) => Plot.line(cur,
         { x: (d) => new Date(d.t), y: "v", stroke: palette.neutral,
           strokeWidth: 0.7, strokeOpacity: 0.28, clip: true })),
-      ...(spec.bands2?.length ? [Plot.areaY(spec.bands2, { x: (d) => new Date(d.t),
+      ...(Array.isArray(spec.bands2) ? [Plot.areaY(spec.bands2, { x: (d) => new Date(d.t),
         y1: "q16", y2: "q84", fill: spec.band2Color ?? palette.neutral, fillOpacity: 0.14 })] : []),
-      ...(spec.bands?.length ? [
+      ...(Array.isArray(spec.bands) ? [
         ...(spec.bands[0].q025 != null ? [Plot.areaY(spec.bands, { x: (d) => new Date(d.t),
           y1: "q025", y2: "q975", fill: palette.neutral, fillOpacity: 0.12 })] : []),
         Plot.areaY(spec.bands, { x: (d) => new Date(d.t), y1: "q16", y2: "q84",
@@ -2422,13 +2422,36 @@ export function glRliScatter({ Plot }, rows, spec = {}) {
   node.removeAttribute("height");
   node.style.cssText += `width:100%;height:auto;display:block;`;
 
-  // dynamic overlays: one svg path each, re-drawn in place on rate input
+  // dynamic overlays + bands: svg elements re-drawn in place on rate input, so
+  // the uncertainty band tracks the central line as the pace slider moves it
   const dynLabels = new Map(); // overlay -> legend label element
   let lastRate = spec.rateInput?.value ?? 1;
-  if (dynamic.length) {
+  const dynBands = [
+    { fn: spec.bands, color: spec.bandColor ?? palette.neutral, opacity: 0.16 },
+    { fn: spec.bands2, color: spec.band2Color ?? palette.neutral, opacity: 0.14 },
+  ].filter((b) => typeof b.fn === "function");
+  if (dynamic.length || dynBands.length) {
     const X = node.scale("x"), Y = node.scale("y");
     const toD = (pts) => pts.map((p, i) =>
       `${i ? "L" : "M"}${X.apply(new Date(p.t)).toFixed(1)},${Y.apply(p.v).toFixed(1)}`).join("");
+    // a band's points -> a closed area polygon (q84 forward, q16 back)
+    const toArea = (pts) => {
+      const top = pts.map((p, i) =>
+        `${i ? "L" : "M"}${X.apply(new Date(p.t)).toFixed(1)},${Y.apply(p.q84).toFixed(1)}`).join("");
+      const bot = pts.slice().reverse().map((p) =>
+        `L${X.apply(new Date(p.t)).toFixed(1)},${Y.apply(p.q16).toFixed(1)}`).join("");
+      return top + bot + "Z";
+    };
+    // band fills go BEHIND the data marks (prepended) so points stay visible
+    const bandPaths = dynBands.map((b) => {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      el.setAttribute("fill", b.color);
+      el.setAttribute("fill-opacity", String(b.opacity));
+      el.setAttribute("stroke", "none");
+      el.style.pointerEvents = "none";
+      node.prepend(el);
+      return el;
+    });
     const paths = dynamic.map((o) => {
       const el = document.createElementNS("http://www.w3.org/2000/svg", "path");
       el.setAttribute("fill", "none");
@@ -2441,6 +2464,7 @@ export function glRliScatter({ Plot }, rows, spec = {}) {
     });
     const redraw = (rate) => {
       lastRate = rate;
+      dynBands.forEach((b, i) => bandPaths[i].setAttribute("d", toArea(b.fn(rate))));
       dynamic.forEach((o, i) => {
         paths[i].setAttribute("d", toD(o.pts(rate)));
         const lab = dynLabels.get(o);
@@ -2487,9 +2511,9 @@ export function glRliScatter({ Plot }, rows, spec = {}) {
   });
   wrap.appendChild(leg);
   const allLines = [...staticLines, ...dynamic];
-  if (spec.bands?.length)
+  if (spec.bands)
     allLines.push({ name: "68% band (two-step)", color: spec.bandColor ?? palette.neutral, band: true });
-  if (spec.bands2?.length)
+  if (spec.bands2)
     allLines.push({ name: "68% band (time fit)", color: spec.band2Color ?? palette.neutral, band: true });
   if (allLines.length) {
     const box = document.createElement("div");
