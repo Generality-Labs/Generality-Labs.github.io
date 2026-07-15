@@ -19,7 +19,7 @@ from pathlib import Path
 
 URL = "https://labs.scale.com/leaderboard/rli"
 TARGETS = [
-    Path(__file__).resolve().parents[1] / "blog/posts/benchmark-saturation/data/rli.json",
+    Path(__file__).resolve().parents[1] / "blog/posts/forecasting-the-remote-labor-index/data/rli.json",
     Path(__file__).resolve().parents[1] / "blog/posts/task-difficulty/data/rli.json",
 ]
 EFFORT = ['reasoning', 'thinking', 'high', 'medium', 'low', 'minimal', 'xhigh',
