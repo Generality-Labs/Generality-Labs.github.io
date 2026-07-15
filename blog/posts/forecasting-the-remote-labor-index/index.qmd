@@ -13,7 +13,7 @@ format:
 
 ```{ojs}
 //| echo: false
-glVersion = "20260714-211744"   // bumped by scripts/deploy-post.sh on every deploy
+glVersion = "20260715-131900"   // bumped by scripts/deploy-post.sh on every deploy
 gl = import(`/assets/gl-components/gl.js?v=${glVersion}`)
 glsat = import(`/assets/gl-components/glsat.js?v=${glVersion}`)
 mc = import(`/assets/gl-components/model-colors.js?v=${glVersion}`)
@@ -190,8 +190,6 @@ We find the two methodologies to be broadly similar, both trending downwards as 
 
 The first shortcoming we address is that every new fit goes in blind; it has no prior assumptions about what a saturation curve should look like. This is particularly damaging in the data-scarce setup as with very few points the fit is liable to assume implausible parameters to fit the few points well. This results in extremely brittle fits which do a very poor job forecasting the rest of the curve. We can resolve this by providing some prior to the fit about how trends have panned out in the past, weighting it towards more historically plausible curves than those which fit the immediate data. Applying this fix yields a significant improvement in the low data regime which we care about.
 
-<!-- PROSE: diagnosis (a) — untamed steepness; a 3-point fit permits any k. Fix: LOO population prior on log k, one pseudo-observation. -->
-
 ```{ojs}
 //| echo: false
 //| classes: gl-inline
@@ -200,8 +198,6 @@ glsat.glMaturityDist(null, btMaturity, {keep: zooKeep, delta: 0.2, rliDelta: 0.1
 ```
 
 The second problem is specific to the two-step fit and a reliance on a metric which compresses the general notion of capability into a scalar. To understand why it is a problem, we need to step back and remind ourselves what it is we are forecasting here: the frontier scores of benchmarks. With the two-step fit, we aim first to find the leading ECI at a given date, but then second to find only the expected score at that ECI. In this way, we are susceptible to underestimating the frontier which is defined by the outlier models, models which perform better than ECI-expected on a given benchmark. This is evident when we consider the direction of the error of our fits.
-
-<!-- PROSE: diagnosis (b) — records run ahead of the typical-model law (persistent per-benchmark specialisation; worst where the benchmark correlates weakly with ECI). Fix: one per-benchmark offset, shrunk toward the population. -->
 
 ```{ojs}
 //| echo: false
@@ -256,16 +252,19 @@ rliCone = {
 }
 // band upper = curve + up, lower = curve - down (both half-widths >= 0, so the
 // curve is always inside; up is the toward-higher-score side).
-rliBand = {
+// bands are functions of the pace multiplier so they track the central line as
+// the slider moves it (the cone half-width stays a function of calendar horizon;
+// only the curve it wraps shifts with the pace)
+rliBand = (mult) => {
   const clip = v => Math.max(0, Math.min(1, v)), {eci, T0, DAY} = rliCone;
-  return finalCurves(1).map(p => {
+  return finalCurves(mult).map(p => {
     const w = eci((+new Date(p.t) - T0) / DAY);
     return {t: p.t, q16: clip(p.twostep - w.down), q84: clip(p.twostep + w.up)};
   });
 }
-rliBandTime = {
+rliBandTime = (mult) => {
   const clip = v => Math.max(0, Math.min(1, v)), {time, T0, DAY} = rliCone;
-  return finalCurves(1).map(p => {
+  return finalCurves(mult).map(p => {
     const w = time((+new Date(p.t) - T0) / DAY);
     return {t: p.t, q16: clip(p.time - w.down), q84: clip(p.time + w.up)};
   });
