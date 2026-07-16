@@ -1,0 +1,270 @@
+---
+pagetitle: "Audit: SimpleQA Verified - Generality Labs"
+format:
+  html:
+    page-layout: custom
+    theme: none
+    include-in-header: _head.html
+    include-before-body: _before.html
+    include-after-body: _after.html
+    link-external-newwindow: true
+    embed-resources: false
+---
+
+```{ojs}
+//| echo: false
+glVersion = "dev-v2"
+gl = import(`/assets/gl-components/gl.js?v=${glVersion}`)
+mc = import(`/assets/gl-components/model-colors.js?v=${glVersion}`)
+```
+
+```{ojs}
+//| echo: false
+{
+  const frontier = [...scores].sort((a, b) => b.headline - a.headline)[0];
+  const biting = verdicts.filter(v => v.bites === true).length;
+  return gl.glStatBar(null, [
+    { label: "samples", value: questions.length.toLocaleString(), detail: "single-answer recall" },
+    { label: "frontier", value: frontier.headline.toFixed(3), detail: frontier.pretty },
+    { label: "best-guess ceiling", value: ((questions.length - biting) / questions.length).toFixed(2) },
+  ]);
+}
+```
+
+SimpleQA Verified evaluates a model's ability to recall very obscure facts
+
+from its weights alone. We think it does this very well. Of the 1000 questions it includes, a very small minority (~1%) are potentially confused, only one question is definitely incorrect. That said, the extent to which this capability matters is unclear, model's appear to be largely plateauing well below the plausible top scores. This is likely because these facts are so obscure, that if they occur in pretraining corpora, it would be a single time.
+
+*\[BRIEF — verdict paragraph. Five clauses, one sentence each: (1) it is a Wikipedia-tail recall benchmark; (2) trust it — labels 99% sound, only 1 unreachable question in 1000, plateau genuine (frontier flat since Feb '26 at 0.773); (3) but the number counts policy as much as knowledge — abstention graded as wrong (up to 81% abstention for some families), judge era shifts grades directionally, and up to half a weak model's score is guessing income; (4) equal scores hide unequal knowledge — least ECI-correlated real component (r = 0.67, 43rd of 49), profiles differ at identical scores; (5) cite it for recall claims, never as a general-capability signal. Seed line: "strong benchmark for testing recall of uncommon facts, not necessarily indicative of overall general capability."\]*
+
+We have applied our findings from this audit to produce an uplifted SimpleQA Verified which we recommend for future usage.
+
+*\[BRIEF — scorecard, seven dimensions. Suggested grades to approve or overrule: label quality STRONG (99% validated, 1 unreachable); headroom ADEQUATE (ceiling 0.99 vs frontier 0.773); contamination resistance ADEQUATE (no answer-key echo anywhere in the field, but Wikipedia-source memorisation is unpunishable and the dataset ships no canary); grading robustness WEAK (abstention conflated with error; judge swap moved grades directionally 3:1); reproducibility WEAK (original judge Gemini 2.0 Flash is EOL — the leaderboard as graded cannot be rerun); incentive alignment WEAK (metric rewards never-abstaining and confident guessing); construct validity ADEQUATE (clean recall measure, weak capability proxy). Component built once grades are settled.\]*
+
+## The benchmark
+
+[SimpleQA](https://arxiv.org/abs/2411.04368) was [introduced by OpenAI](https://openai.com/index/introducing-simpleqa/) in Nov '24 to supersede existing recall benchmarks, which had become saturated. In an effort to ensure longevity, SimpleQA questions were selected such that contemporary models would answer incorrectly at least one time in four. In its original form, SimpleQA measured calibration as well as recall, and as such, the judge model could mark a rollout either Correct, Incorrect, or Not Attempted, depending on model abstention. To account for this, the paper initially reported results as F1 scores.
+
+SimpleQA was taken up by labs soon after its release, appearing in several labs’ system cards. However, at this point a sleight of hand occurred, with scores being reported as headline accuracy instead of F1. This begins the transition from SimpleQA being a calibration benchmark to a recall benchmark. This transition continues when Google releases [SimpleQA Verified](https://arxiv.org/abs/2509.07968) in Sep ‘25, a cleaned and rebalanced 1000 question subset of SimpleQA (originally 4326 questions). The purpose of the reduction was the removal of noisy and incorrect labels, removal of duplicates, and balancing the distribution of topics. They retain the 3-way grading, and report F1 as a headline metric.
+
+SimpleQA Verified then replaces SimpleQA in Anthropic and Google’s system cards. Additionally, it is picked up by Epoch for use in their Epoch Capabilities Index (ECI). In all these cases, the metric reported is headline accuracy, Epoch [notes](https://epoch.ai/benchmarks/simple-qa-verified) that the choice “deviates from Google's methodology”.
+
+```{ojs}
+//| echo: false
+questions = {
+  // question text is stored XOR+base64-obfuscated so scraped copies of this
+  // page cannot leak benchmark items into training corpora; see page canary
+  const KEY = "generality";
+  const dec = (v) => {
+    if (!v.startsWith("enc:")) return v;
+    const raw = atob(v.slice(4));
+    return Array.from(raw, (c, i) =>
+      String.fromCharCode(c.charCodeAt(0) ^ KEY.charCodeAt(i % KEY.length))).join("");
+  };
+  const rows = await FileAttachment("data/questions.json").json();
+  return rows.map((d) => ({ ...d, question: dec(d.question), gold: dec(d.gold) }));
+}
+gl.glQuestionTriplet(null, questions, {
+  seedItems: [989],
+  count: 1,
+})
+```
+
+*\[BRIEF — sourcing. Original SimpleQA: 4,326 Q&A pairs written by human AI trainers to strict criteria (single indisputable answer, time-invariant, evidence URLs). Kept only if a second trainer independently agreed AND the question beat GPT-4o (adversarial selection — difficulty is defined relative to a 2024 OpenAI model). OpenAI's own audit estimated ~3% label error; ours of the Verified subset finds 2.5%. 81% of questions cite Wikipedia among their evidence URLs — memorising Wikipedia's long tail is the literal data-generating process. Verified filtering: dedup, topic rebalancing, re-verification; 58 questions reworded, 30 golds changed (mostly reformatting; at least one correct label made wrong, item 517).\]*
+
+## How models respond
+
+SimpleQA Verified scores have increased with time, frequently with Gemini models setting the frontier.  The current leader, Gemini 3.1 Pro was released in February '26 and no subsequent model has come close to having it beat. One notable aspect of SimpleQA Verified scores is that they violate our general intuitions regarding capability, for instance, Qwen3-Max scores nearly identically to Claude Fable 5.
+
+```{ojs}
+//| echo: false
+scoresRaw = FileAttachment("data/scores_release.json").json()
+scores = mc.dedupMax(scoresRaw, "headline")
+  .filter(d => !mc.baseKey(d.model).includes("claude-3-5-haiku"))
+  .map(d => ({...d,
+    release: new Date(d.release_date),
+    provider: mc.provider(d.model),
+    pretty: mc.displayName(d.model)}))
+gl.glScatter({Plot}, scores, {
+  x: "release", y: "headline", label: "pretty", group: "provider",
+  lo: "lo", hi: "hi",
+  colorDomain: mc.scaleFor(scores.map(d => d.model)).domain,
+  colorRange: mc.scaleFor(scores.map(d => d.model)).range,
+  xLabel: "", yLabel: "",
+  yDomain: [0, 0.85],
+  xDomain: [new Date(Math.min(...scores.map(d => +d.release)) - 61*86400000),
+            new Date(Math.max(...scores.map(d => +d.release)) + 21*86400000)],
+  yFmt: v => v.toFixed(3), xFmt: v => new Date(v).toISOString().slice(0,10),
+  frontier: true, legendBelow: true,
+})
+```
+
+Across the 49 models on Epoch's leaderboard, 974 of the 1000 questions have been answered correctly by at least one model. Of the 26 that remain, our audit found the labels almost all correct: they are not broken questions, just hard ones. And label noise elsewhere does not mean a question cannot be answered, only that grading around it is messy. The questions can be solved. Individual models are just not getting better at solving them. We conclude the plateau is genuine: frontier models have stopped accumulating this kind of obscure factual knowledge.
+
+The single top-line accuracy score can obscure the fact that models perform differently on different subsets of questions. For instance, although Qwen3 Max and Claude Fable 5 score almost identically, they have reasonably different performance profiles. We show this below.
+
+```{ojs}
+//| echo: false
+radar = FileAttachment("data/radar.json").json()
+radarColors = ({"Qwen3 Max": mc.providerColors.Qwen, "Claude Fable 5": mc.providerColors.Anthropic})
+html`<div style="display:flex;gap:1.2rem;justify-content:center;font-size:.9rem;color:#5b5858;margin-bottom:.4rem;">
+  <span><span style="color:${mc.providerColors.Qwen}">●</span> Qwen3 Max</span>
+  <span><span style="color:${mc.providerColors.Anthropic}">●</span> Claude Fable 5</span>
+</div>
+<div style="display:flex;gap:6px;margin:-3.4rem 0 -1.4rem;">
+  <div style="flex:1;min-width:0;">${gl.glRadar(null, radar.topic, {width: 340, colors: radarColors, legend: false})}</div>
+  <div style="flex:1;min-width:0;">${gl.glRadar(null, radar.region, {width: 340, colors: radarColors, legend: false})}</div>
+</div>`
+```
+
+*\[BRIEF — guessing/knows-vs-luck. Facts: across repeated rollouts, flaky items are 99% different-answers-per-rollout (147/148 Flash), so models sample from internal candidate shortlists — pass@k works by harvesting that distribution. Decomposition: Flash-natural 0.671 = 0.571 knows + 0.100 luck (85% knowledge); Haiku-32K 0.137 = 0.063 + 0.074 — over half its score is lottery income. Thinking budget stabilises Flash's knowledge (knows 0.431 to 0.548) but only widens Haiku's guessing band (knows flat). Hedging inside answers is extinct (~0.5%) because the judge gives no partial credit — single confident guess is the optimal policy. Years most guessable (19% flip rate), full dates least (11%); names ≈ numbers. Figure (stacked knows/luck bars per config) ready to build.\]*
+
+*\[BRIEF — Qwen case study. Epoch flags suspected contamination (Qwen3-Max led SQAV at 0.674 while ranking far lower on AA-Omniscience, a closed twin). Our canary tests cut against the literal claim: 7 of the 10 truth-penalising wrong golds are inherited verbatim from the public original file; Qwen echoes only 2 and confidently contradicts the rest (real Lilongwe latitude, "Santa Anna was never VP"); NO model in the field echoes the file-only errors. Qwen's score decomposes as: extreme Wikipedia-tail memorisation (sole solver of 9 of the 55 questions only one model gets; recites infobox detail unprompted) x never abstaining (0.4%; 90% of its wrong answers carry zero hedging). Verdict: source memorisation, not answer-key training — the score is real and still doesn't mean what a reader assumes. The benchmark's incentive structure is what makes this strategy optimal.\]*
+
+Reasoning tokens are known to [help recall](https://arxiv.org/abs/2603.09906): both models we test, Claude Haiku 4.5 and Gemini 3.5 Flash, score higher when allowed to think before answering. The effect saturates fast, within a few hundred tokens, and is much larger for Flash (+15pp) than for Haiku (+3pp). We explore scaling reasoning tokens both serially, giving the model more tokens with which to deliberate before it answers, and in parallel, giving the model multiple independent runs and taking any single correct answer, to see which is more useful on SimpleQA Verified.
+
+```{ojs}
+//| echo: false
+infscale = FileAttachment("data/infscale.json").json()
+gl.glInfScale({Plot}, infscale, {
+  colors: {"Haiku 4.5": mc.providerColors.Anthropic, "Flash 3.5": mc.providerColors.Google},
+  xType: "log", xDomain: [1, 7000],
+})
+```
+
+## Issues
+
+### Abstentions
+
+One problem is that the model is not forced to answer. This was intentional at the start: SimpleQA tested whether a model would confidently answer incorrectly or admit that it did not know. This is why there are three grades, Correct, Incorrect, and Not Attempted. The judge marks a rollout Not Attempted when it refuses or will not commit to an answer. We find that this outcome varies wildly between models, and crucially, between model families.
+
+```{ojs}
+//| echo: false
+models = FileAttachment("data/models.json").json()
+modelsDedup = mc.dedupMax(models, "abstain").map(d => ({...d,
+  provider: mc.provider(d.model), pretty: mc.displayName(d.model)}))
+abstSorted = modelsDedup.slice().sort((a,b) => b.abstain - a.abstain)
+abstShown = (() => {
+  const n = abstSorted.length
+  const idx = new Set([0,1,2,3,4,5,6,7, n-5, n-4, n-3, n-2, n-1])
+  for (let j = 0; j < 8; j++) idx.add(Math.round(8 + (n - 14 - 8) * j / 7))
+  return [...idx].sort((a,b) => a-b).map(i => abstSorted[i])
+})()
+gl.glBars({Plot}, abstShown.map(d => ({label: d.pretty, value: d.abstain, group: d.provider})), {
+  xLabel: "abstention rate (share of questions not attempted)",
+  tipName: "abstention",
+  valueFmt: v => (100*v).toFixed(1)+"%",
+  colorDomain: mc.scaleFor(modelsDedup.map(d => d.model)).domain,
+  colorRange: mc.scaleFor(modelsDedup.map(d => d.model)).range,
+})
+```
+
+Anthropic models abstain constantly, on up to 81% of questions. The small GPTs abstain moderately. Gemini and the Chinese models essentially never abstain. Due to the current implementation of SimpleQA Verified, abstention is marked identically to incorrectness. Because Anthropic models love to abstain, they are marked down. We can correct for this naively by only scoring the questions a model actually attempted. The effect of this is shown below. Additionally, the effect of the F1 metric is shown, as it is just the harmonic mean of the two others.
+
+```{ojs}
+//| echo: false
+relByBase = new Map(scores.map(d => [mc.baseKey(d.model), d.release_date]))
+gradings = modelsDedup
+  .map(d => ({...d, release_date: relByBase.get(mc.baseKey(d.model))}))
+  .filter(d => d.release_date)
+  .map(d => ({x: new Date(d.release_date), label: d.pretty, group: d.provider,
+    "headline": d.headline,
+    "accuracy when attempted": d.attempted_acc,
+    "F1": d.headline + d.attempted_acc > 0 ? 2*d.headline*d.attempted_acc/(d.headline+d.attempted_acc) : null}))
+gl.glTripletScatter({Plot}, gradings, {
+  metrics: ["headline", "F1", "accuracy when attempted"],
+  xLabel: "model release date",
+  yDomain: [0, 0.85],
+  xDomain: [new Date(Math.min(...gradings.map(d => +d.x)) - 61*86400000),
+            new Date(Math.max(...gradings.map(d => +d.x)) + 21*86400000)],
+  colorDomain: mc.scaleFor(modelsDedup.map(d => d.model)).domain,
+  colorRange: mc.scaleFor(modelsDedup.map(d => d.model)).range,
+})
+```
+
+This implies that Anthropic models are being systematically underestimated by SimpleQA Verified. The corrected numbers are an overestimate though: models abstain on precisely the questions they are least likely to get right. The only way to truly find what models could’ve scored is to rerun them without the option to not answer.
+
+To enable this we rerun the eval but append to the prompt an instruction to the model not to hedge and caveat. The entirety of the change is adding the following.
+
+> You must answer with a single specific best guess (a name, date, number, or phrase). Refusing is not an option: I will verify your guess online afterwards, so a wrong guess costs nothing, but "I don't know" or any disclaimer about uncertainty makes your answer useless to me. Reply with just your best guess, stated as a plain fact.
+
+We find this to mostly (though not completely) remove the tendency to abstain, making headline accuracy a more honest estimate of actual performance.
+
+```{ojs}
+//| echo: false
+forcing = FileAttachment("data/forcing.json").json()
+gl.glForcingPairs({Plot}, forcing.map(d => ({...d, label: d.model, hex: mc.providerColors[mc.provider(d.model)]})), {
+})
+```
+
+Removing the option to abstain recovers some of the performance, though not as much as the naive normalisation implied. In this way, we believe we are getting closer to faithfully measuring models' performance on SimpleQA Verified. We consider this a marked improvement over the standard setup, which systematically biases against the labs whose models abstain.
+
+### Judge changes
+
+Originally, Epoch used Gemini 2.0 Flash as its judge model. After the 21st of February 2026, this was switched to GPT-5-mini.
+
+```{ojs}
+//| echo: false
+regrade = FileAttachment("data/regrade.json").json()
+regradeMax = Math.max(...regrade.map(d => d.disagree))
+gl.glHistogram({Plot}, regrade.map(d => ({...d, value: d.disagree,
+    series: d.era === "flash" ? "mini regrading flash-era runs" : "mini regrading mini-era runs"})), {
+  xLabel: "share of grades changed on regrade",
+  thresholds: d3.range(0, regradeMax + 0.003, 0.003),
+  colorDomain: ["mini regrading flash-era runs", "mini regrading mini-era runs"],
+  colorRange: [mc.providerColors.Google, mc.providerColors.OpenAI],
+  xFmt: v => (100*v).toFixed(1)+"%",
+})
+```
+
+```{ojs}
+//| echo: false
+confusion = FileAttachment("data/confusion.json").json()
+gl.glConfusion(null, confusion, {
+})
+```
+
+We investigate the effect of this choice by regrading every run with GPT-5-mini: both runs originally graded by Flash, and runs originally graded by mini itself, which gives us the noise floor. Swapping judges barely moves headline scores, half a point on average. But the disagreement is real and directional: on Flash-era runs, mini revokes three times more Correct grades than it grants, while on its own era the flips are small and symmetric. Flash accepted answers that mini rejects. Whichever judge is right, scores from the two eras are not quite comparable. And since Google shut Gemini 2.0 Flash down in June 2026, the leaderboard as originally graded can no longer be reproduced.
+
+### Label noise
+
+Label noise is an umbrella term that covers incorrect, partially correct and otherwise defective labels that mean that answers produced by the model which we would deem correct are refused by the benchmark grader. For samples with noisy labels, one way we would expect them to show up as having never been scored on by models. We look at the distribution of number of solves per sample but find no evidence of a high number of questions which no model has solved.
+
+```{ojs}
+//| echo: false
+gl.glSolveDist({Plot}, questions, {})
+```
+
+In addition to this, we run a sweep over each individual question and answer pair, tasking an agent with web search to determine whether answers seem supported or could be confused. We find that for an overwhelming majority of cases (975/1000) no issue is present, however 25 samples are flagged as warranting further attention. More thorough regrading of these finds that a total of 17 questions are either wrong or unverifiable.
+
+```{ojs}
+//| echo: false
+verdicts = FileAttachment("data/audit_verdicts.json").json()
+gl.glSankey(null, verdicts, {})
+```
+
+```{ojs}
+//| echo: false
+gl.glAuditCard(null, verdicts, {
+})
+```
+
+As could be expected, given the Verified split is filtered and cleaned already, there is very little noise. We believe label noise can account for at most a ~1% noise ceiling, and so cannot be the explanation for the plateau. It has to be something else.
+
+*\[BRIEF — fuzzy-but-scoreable reframe. Of 18 wrong/ambiguous labels: 1 unreachable (Lilongwe lat/long column swap — the only question in the benchmark where no answer is both true and gold-matching); ~8 genuine ambiguity (numbering disputes, conflicting sources, counting methodology); ~9 plain gold errors with a single right answer elsewhere (dates off by days, misspelt names, 60 vs 200 livres). 24 of the 25 problem labels are still scoreable — on ~10 of them knowing the truth is what costs you. Net score suppression ~0.3pp; ceiling 0.99.\]*
+
+*\[BRIEF — ECI correlation. SimpleQA Verified correlates with ECI at r = 0.673 across 51 models — 43rd of 49 rankable components. It clusters at the bottom with the other recall benchmarks (TriviaQA 0.348 dead last, GeoBench 0.451, LAMBADA 0.411) while every reasoning benchmark sits 0.85–0.98 (GPQA 0.978, MATH L5 0.970, MMLU 0.953). Caveat that helps us: TriviaQA/LAMBADA correlate poorly partly through saturation, but SQAV is unsaturated (scores span 0.07–0.77), so its low correlation is genuine. Also note ECI is fit FROM these benchmarks, so correlations are conservative. Exporter + figure ready to build.\]*
+
+## Bottom line
+
+*\[BRIEF — bottom line. Use it for: recall-of-obscure-facts claims, tracking parametric knowledge over time. Never use it for: general capability ranking (ECI 43/49), cross-family comparison without an abstention correction (up to 81% abstention taxed as error). To read a score honestly: prefer the forced-answer arm, know which judge era graded it, remember a weak model's number can be half luck. Pair with a closed twin (AA-Omniscience) for contamination triangulation. Upstream asks: fix the 10 truth-penalising labels (list supplied), add a canary string (dataset ships none), pin an open-weights judge so the leaderboard stays reproducible (Gemini 2.0 Flash is EOL). Mention the uplifted SQAV release.\]*
+
+*\[parked: old summary bullets\]*
+
+We audited SimpleQA Verified, and found:
+
+- A small minority (~1%) of questions are poorly labelled, either because there are multiple correct answers, there is no correct answer, or the question is poorly framed.
+- Despite the possible limit of ~99% individual models are struggling to break 80%.
+- The current grading setup penalises certain model families more than others for refusing to answer due to a lack of confidence .
+
+*\[parked from v1, likely cut: "It is unclear what to make of this. We see three possible explanations: 1. Label noise… 2. Accuracy is reductive… 3. A genuine plateau… We take these in turn."\]*
