@@ -4,9 +4,13 @@ format:
   html:
     page-layout: custom
     theme: none
-    include-in-header: _head.html
-    include-before-body: _before.html
-    include-after-body: _after.html
+    include-in-header:
+      - ../../../_includes/head.html
+      - _head-extra.html
+    include-before-body:
+      - ../../../_includes/post-before.html
+      - _header.html
+    include-after-body: ../../../_includes/post-after.html
     link-external-newwindow: true
     embed-resources: false
 ---

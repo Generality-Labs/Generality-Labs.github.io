@@ -31,8 +31,12 @@ $(QUARTO):
 render: $(QUARTO)
 	$(QUARTO) render
 
+# Preview one post with re-render on save (default-type projects can't
+# preview project-wide). Usage: make preview POST=blog/posts/my-post
+POST ?= blog/posts/hello-world
+
 preview: $(QUARTO)
-	$(QUARTO) preview
+	$(QUARTO) preview $(POST)/index.qmd
 
 clean-tools:
 	rm -rf .tools

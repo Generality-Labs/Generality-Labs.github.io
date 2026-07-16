@@ -11,6 +11,3 @@ project:
   post-render: scripts/share_quarto_libs.py
   render:
     - blog/posts/**/*.qmd
-    # Frozen: rendered output is committed and live; re-render only
-    # deliberately, by explicit path.
-    - "!blog/posts/forecasting-the-remote-labor-index/"
