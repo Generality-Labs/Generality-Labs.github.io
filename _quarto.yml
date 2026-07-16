@@ -1,0 +1,11 @@
+# Deliberately minimal: no shared `format:` defaults here, because include
+# lists merge (concatenate) across project and document config — defaults
+# would double-inject headers into the existing forecasting post. Shared
+# chrome lives in _includes/ and each post opts in from its own frontmatter.
+project:
+  type: default
+  render:
+    - blog/posts/**/*.qmd
+    # Frozen: rendered output is committed and live; re-render only
+    # deliberately, by explicit path.
+    - "!blog/posts/forecasting-the-remote-labor-index/"

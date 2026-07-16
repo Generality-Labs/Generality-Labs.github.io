@@ -1,0 +1,38 @@
+---
+pagetitle: "Hello World - Generality Labs"
+format:
+  html:
+    page-layout: custom
+    theme: none
+    include-in-header: ../../../_includes/head.html
+    include-before-body:
+      - ../../../_includes/post-before.html
+      - _header.html
+    include-after-body: ../../../_includes/post-after.html
+    link-external-newwindow: true
+    embed-resources: false
+---
+
+```{ojs}
+//| echo: false
+gl = import("/assets/gl-components/gl.js")
+mc = import("/assets/gl-components/model-colors.js")
+```
+
+Hello, world. This post exists to prove the shared scaffolding works end to end: the nav, typography, and footer come from the site-wide includes, and the figure below is rendered client-side by an OJS cell calling the house component library.
+
+```{ojs}
+//| echo: false
+letters = {
+  const counts = {};
+  for (const ch of "helloworld") counts[ch] = (counts[ch] ?? 0) + 1;
+  return Object.entries(counts).map(([label, value]) => ({ label, value, group: "letter" }));
+}
+gl.glBars({Plot}, letters, {
+  xLabel: "occurrences",
+  caption: "Letter frequency in “hello world”.",
+  width: 688,
+})
+```
+
+Everything a real post needs works from here: markdown prose, `inline code`, [links](https://generality.org), and OJS cells reading data contracts from a local `data/` directory.
