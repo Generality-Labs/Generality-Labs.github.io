@@ -23,6 +23,17 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8787
 RENDER_LOCK = threading.Lock()
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
+def pinned_quarto_bin():
+    """bin/ of the repo-pinned quarto (Makefile QUARTO_VERSION, fetched by
+    `make setup`); empty string if the Makefile pin can't be read."""
+    try:
+        with open(os.path.join(REPO, "Makefile")) as f:
+            m = re.search(r"^QUARTO_VERSION := (\S+)", f.read(), re.M)
+        return os.path.join(REPO, ".tools", f"quarto-{m.group(1)}", "bin") if m else ""
+    except OSError:
+        return ""
+
 # review comments on the local editing page: the widget is injected alongside
 # gl-edit and /api/comments is proxied to staging (shared D1), so James sees
 # reviewers' comments in place while editing
@@ -250,7 +261,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self.reply(400, {"error": f"unknown post {slug!r}"})
 
         if self.path == "/__edit/render":
-            env = dict(os.environ, PATH=os.path.expanduser("~/.local/quarto-dist/bin") + ":" + os.environ["PATH"])
+            # prefer the repo-pinned quarto; fall back to whatever is on PATH
+            env = dict(os.environ, PATH=pinned_quarto_bin() + ":" + os.environ["PATH"])
             with RENDER_LOCK:  # auto-render + manual render must not race quarto
                 r = subprocess.run(["quarto", "render", "index.qmd"], cwd=os.path.dirname(qmd), env=env,
                                    capture_output=True, text=True, timeout=300)

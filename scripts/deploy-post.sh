@@ -10,19 +10,23 @@
 #
 # Usage: scripts/deploy-post.sh [post-dir] [branch]
 set -euo pipefail
-POST=${1:-blog/posts/simpleqa-audit}
-BRANCH=${2:-simpleqa-audit}
+POST=${1:?usage: scripts/deploy-post.sh <post-dir> [branch]}
+BRANCH=${2:-$(basename "$POST")}
 cd "$(dirname "$0")/.."
 
 V=$(date +%Y%m%d-%H%M%S)
 sed -i '' "s/glVersion = \"[^\"]*\"/glVersion = \"$V\"/" "$POST/index.qmd"
-export PATH="$HOME/.local/quarto-dist/bin:$PATH"
+# render with the repo-pinned quarto (make setup fetches it into .tools/)
+make -s setup
+QV=$(sed -n 's/^QUARTO_VERSION := //p' Makefile)
+export PATH="$PWD/.tools/quarto-$QV/bin:$PATH"
 (cd "$POST" && quarto render index.qmd)
 
 # Assemble the staging bundle: site + review layer.
 STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT
-rsync -a --exclude .git --exclude .wrangler --exclude review --exclude scripts . "$STAGE/"
+rsync -a --exclude .git --exclude .wrangler --exclude review --exclude scripts \
+  --exclude .tools --exclude .quarto . "$STAGE/"
 cp -R review/functions "$STAGE/functions"
 find "$STAGE/blog/posts" -name index.html -exec \
   sed -i '' 's|</body>|<script type="module" src="/assets/gl-comments/gl-comments.js"></script></body>|' {} +
