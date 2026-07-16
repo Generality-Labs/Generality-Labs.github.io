@@ -4,6 +4,11 @@
 # chrome lives in _includes/ and each post opts in from its own frontmatter.
 project:
   type: default
+  # Hoist each post's private Quarto runtime (index_files/libs/, ~1MB) into
+  # shared, version-scoped /assets/quarto-libs/ so readers cache it once
+  # across posts. Version-scoped => a toolchain bump never mutates the libs
+  # already-shipped posts reference.
+  post-render: scripts/share_quarto_libs.py
   render:
     - blog/posts/**/*.qmd
     # Frozen: rendered output is committed and live; re-render only
