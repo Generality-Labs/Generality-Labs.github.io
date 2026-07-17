@@ -1,12 +1,12 @@
 # Blog publishing workflow
 
-How posts get written, reviewed, and shipped on this site. Three environments:
+How posts get written, reviewed, and shipped. Three environments:
 
-| | where | who sees it | special powers |
+| | where | who sees it | notes |
 |---|---|---|---|
-| **local** | `http://localhost:8787` | you (+ LAN) | in-place prose editing |
-| **staging** | `https://<branch>.generality-site.pages.dev` | anyone with the review link | Google-Docs-style comments |
-| **prod** | GitHub Pages (this repo) | everyone | none — clean by construction |
+| **local** | `make preview` on `localhost` | you | live-reload while drafting |
+| **preview** | `https://<preview-branch>.generality-site.pages.dev` | anyone with the link | auto-built for `preview/*` branches; link posted on the PR |
+| **prod** | GitHub Pages → **generality.org** | everyone | served from `main`; clean by construction |
 
 ## 0. Toolchain
 
@@ -15,8 +15,8 @@ make setup        # once per machine: fetches the pinned Quarto into .tools/
 ```
 
 Rendered HTML is committed and served as-is, so everyone must render with the
-same Quarto version — the pin lives in the `Makefile` (`QUARTO_VERSION`), and
-`make render` / `make preview` / `deploy-post.sh` / the edit server all use it.
+same Quarto version — the pin lives in the `Makefile` (`QUARTO_VERSION`); `make
+render` and `make preview` use it.
 
 ## 1. Start a post
 
@@ -37,75 +37,80 @@ a **gl component**. Keep the export script checked in next to the analysis.
 ## 2. Draft locally
 
 ```bash
-python3 scripts/edit-server.py        # serves repo on :8787
+make preview POST=blog/posts/my-post-slug   # live-reloading Quarto preview
 ```
 
-Open the post. Every prose block is editable in place (Google Docs feel);
-the save pill writes changes back into `index.qmd` as markdown and re-renders
-(~30s). Block edits are verified against the source before any write — a
-mismatch flags the block red and touches nothing. Figures and captions are
-not editable (they live in OJS cells). Git is the undo button.
+Edit `index.qmd`, save, watch it re-render. This is the standard local flow.
 
-The mapper understands paragraphs, headings, lists, blockquotes. Not yet:
-tables, `:::` divs, display maths — extend `parse_segments` in
-`scripts/edit-server.py` when a post needs them.
+> There is also an experimental in-place WYSIWYG prose editor
+> (`python3 scripts/edit-server.py`, serves on `:8787`), but it's a **local-only
+> convenience — not part of the shared workflow** and still rough around inline
+> links/footnotes. Prefer `make preview` + editing the `.qmd`.
 
-## 3. Stage for review
+## 3. Preview for review
+
+Put your work on a branch under the **`preview/`** prefix, render, and push:
 
 ```bash
-scripts/deploy-post.sh blog/posts/my-post-slug my-branch
+git switch -c preview/my-post-slug
+make render                                  # commit the rendered HTML
+git commit -am "draft: my post" && git push -u origin preview/my-post-slug
 ```
 
-Renders and deploys to Cloudflare Pages (staging only). The script assembles a
-temp bundle where it injects the gl-comments client and ships
-`review/functions/` as the comments API — the repo's own files are never
-touched, so prod can never inherit review machinery.
+Cloudflare Pages auto-builds any `preview/*` branch; open a PR from it and the
+Cloudflare bot comments the **preview URL** on the PR. Use the stable **Branch
+Preview URL** (`preview-my-post-slug.generality-site.pages.dev`) — it survives
+re-pushes, so review links persist as you iterate. Only `preview/*` branches
+build; any other branch stays silent (no preview, no comment).
 
-Reviewers get ONE shared link: `…pages.dev/blog/posts/my-post-slug/?key=<GL_REVIEW_KEY>`
-(key lives in `../.env`; rotate by generating a new one, PATCHing the Pages
-project env var, and redeploying — see git history for the exact call).
-They highlight text → comment → asked their name once. Comments are
-quote-anchored so they survive prose edits; orphaned ones drop into a strip
-at the bottom of the page rather than vanishing. Comments live in the
-`gl-review-comments` D1 database, keyed by post slug.
+> Inline on-page commenting isn't wired up yet — review via the preview link +
+> PR comments for now. (A hosted annotation layer is a possible future add.)
 
 ## 4. Ship to prod
 
-Prod is GitHub Pages served straight from `main` → **generality.org** (CNAME).
-Static: the rendered `index.html` and external `data/` are committed, so there
-is no build step — a push to `main` is the deploy. Merge the post branch into
-`main` and push. Before shipping: remove the "Draft" eyebrow in `_before.html`.
-Nothing else to strip — edit and review layers exist only in the local server
-and the staging bundle.
+Prod is GitHub Pages served from `main` → **generality.org** (CNAME). Static:
+the rendered `index.html` and `data/` are committed, so a merge to `main` *is*
+the deploy. Merge the post branch into `main`. Before shipping:
 
-**Branch hygiene.** Post work belongs on a descriptively-named branch, PR'd
-into `main`. `deploy-post.sh` now requires the post dir and defaults the
-staging branch to the post slug; one branch per post, reconcile to `main`
-deliberately (the old `simpleqa-audit` default once drifted into a de-facto
-trunk hundreds of commits ahead of `main`).
+- remove the "Draft" eyebrow from the post's `_header.html`,
+- add a card for the post to `blog/index.html` (the index is hand-maintained —
+  copy an existing `<a class="post-card">` block).
 
-**Shared Quarto runtime.** A `post-render` hook (`scripts/share_quarto_libs.py`)
-hoists each rendered post's private `index_files/libs/` (~1MB of Quarto/OJS
-runtime) into version-scoped `assets/quarto-libs/`, so readers cache it once
-across posts. Heads-up: the forecasting-the-remote-labor-index post still
-carries a private copy from before the hook existed; the next explicit
-re-render (which `deploy-post.sh` does) will hoist it and rewrite its HTML —
-a one-time mechanical diff, commit it rather than reverting.
+## Branch hygiene
+
+One branch per post, PR'd into `main`. Use the `preview/` prefix for anything
+you want a preview link for; reconcile to `main` deliberately.
+
+## Shared Quarto runtime
+
+A `post-render` hook (`scripts/share_quarto_libs.py`) hoists each rendered
+post's private `index_files/libs/` (~1MB of Quarto/OJS runtime) into
+version-scoped `assets/quarto-libs/`, so readers cache it once across posts.
+Version-scoped on purpose: a toolchain bump creates a sibling dir rather than
+mutating libs that already-shipped posts reference.
+
+## Hosting
+
+- **Prod:** GitHub Pages, from `main` → generality.org (the `CNAME` file).
+- **Previews:** the `generality-site` **Cloudflare Pages** project (Git-connected),
+  builds `preview/*` branches and comments preview links on PRs. No token, no
+  manual deploy.
 
 ## Live data (RLI auto-update)
 
 `.github/workflows/update-rli.yml` runs `scripts/update_rli.py` weekly. It
 scrapes the Scale RLI leaderboard (`labs.scale.com/leaderboard/rli`, a static
-HTML table), appends any new models to the forecasting-the-remote-labor-index post's
-`data/rli.json` (dated at appearance, effort-configs collapsed to best score),
-and commits to `main` — so new models surface as out-of-sample stars on the
-final forecast graph without touching the frozen fit. Needs repo Actions to
+HTML table), appends any new models to the forecasting-the-remote-labor-index
+post's `data/rli.json` (dated at appearance, effort-configs collapsed to best
+score), and commits to `main` — so new models surface as out-of-sample stars on
+the final forecast graph without touching the frozen fit. Needs repo Actions to
 have write permission (Settings → Actions → Workflow permissions). Stdlib-only,
 so no dependency install in the runner.
 
-The forecasting-the-remote-labor-index figure data is generated by the analysis pipeline in
-the sibling `../saturation/` repo (see its `PIPELINE.md`; `./run_all.sh`
-regenerates every data contract from the committed `*_raw.json` sources).
+The forecasting-the-remote-labor-index figure data is generated by the analysis
+pipeline in the sibling `../saturation/` repo (see its `PIPELINE.md`;
+`./run_all.sh` regenerates every data contract from the committed `*_raw.json`
+sources).
 
 ## Pieces
 
@@ -115,12 +120,9 @@ regenerates every data contract from the committed `*_raw.json` sources).
 - `scripts/share_quarto_libs.py` — post-render hook deduplicating Quarto libs
 - `assets/gl-components/gl.js` — figure component library (house style lives here)
 - `assets/gl-components/model-colors.js` — canonical provider colours/names
-- `assets/gl-comments/gl-comments.js` — staging review client
-- `assets/gl-edit/gl-edit.js` — local editing client
-- `review/functions/api/comments.js` — comments API (Pages Function + D1)
-- `scripts/edit-server.py` — local dev server with editing
-- `scripts/deploy-post.sh` — render + stage
 - `scripts/new-post.sh` — scaffold
 - `scripts/update_rli.py` — scrape Scale leaderboard, append new RLI models
 - `.github/workflows/update-rli.yml` — weekly RLI auto-update cron
+- `scripts/edit-server.py`, `assets/gl-edit/` — experimental local in-place editor (not part of the shared flow)
+- `assets/gl-comments/`, `review/` — legacy bespoke review-comment system (currently unused; inline comments TBD)
 - `style-lab/` — graph house-style workshop (internal)
