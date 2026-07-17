@@ -8,15 +8,27 @@ How posts get written, reviewed, and shipped on this site. Three environments:
 | **staging** | `https://<branch>.generality-site.pages.dev` | anyone with the review link | Google-Docs-style comments |
 | **prod** | GitHub Pages (this repo) | everyone | none — clean by construction |
 
+## 0. Toolchain
+
+```bash
+make setup        # once per machine: fetches the pinned Quarto into .tools/
+```
+
+Rendered HTML is committed and served as-is, so everyone must render with the
+same Quarto version — the pin lives in the `Makefile` (`QUARTO_VERSION`), and
+`make render` / `make preview` / `deploy-post.sh` / the edit server all use it.
+
 ## 1. Start a post
 
 ```bash
-scripts/new-post.sh my-post-slug "My Post Title"
+scripts/new-post.sh my-post-slug "My Post Title" ["Author Name"]
 ```
 
-Scaffolds `blog/posts/my-post-slug/` with the site shell (`_head/_before/_after.html`),
-a `data/` directory for figure data contracts, and a qmd skeleton that imports
-`gl.js` (figure components) and `model-colors.js` (provider identity).
+Scaffolds `blog/posts/my-post-slug/` on the shared site shell (`_includes/`
+partials + `assets/site.css`; only the title block `_header.html` is
+post-local), a `data/` directory for figure data contracts, and a qmd skeleton
+that imports `gl.js` (figure components) and `model-colors.js` (provider
+identity).
 
 Figures follow a three-layer architecture: an **export script** in the analysis
 repo writes a small JSON **data contract** into `data/`; an OJS cell feeds it to
@@ -67,10 +79,18 @@ Nothing else to strip — edit and review layers exist only in the local server
 and the staging bundle.
 
 **Branch hygiene.** Post work belongs on a descriptively-named branch, PR'd
-into `main`. Note the `deploy-post.sh` default branch is `simpleqa-audit`; do
-not let unrelated work accumulate on it (it once drifted into a de-facto trunk
-hundreds of commits ahead of `main`). One branch per post, reconcile to `main`
-deliberately.
+into `main`. `deploy-post.sh` now requires the post dir and defaults the
+staging branch to the post slug; one branch per post, reconcile to `main`
+deliberately (the old `simpleqa-audit` default once drifted into a de-facto
+trunk hundreds of commits ahead of `main`).
+
+**Shared Quarto runtime.** A `post-render` hook (`scripts/share_quarto_libs.py`)
+hoists each rendered post's private `index_files/libs/` (~1MB of Quarto/OJS
+runtime) into version-scoped `assets/quarto-libs/`, so readers cache it once
+across posts. Heads-up: the forecasting-the-remote-labor-index post still
+carries a private copy from before the hook existed; the next explicit
+re-render (which `deploy-post.sh` does) will hoist it and rewrite its HTML —
+a one-time mechanical diff, commit it rather than reverting.
 
 ## Live data (RLI auto-update)
 
@@ -89,6 +109,10 @@ regenerates every data contract from the committed `*_raw.json` sources).
 
 ## Pieces
 
+- `Makefile` — pinned Quarto toolchain (`make setup/render/preview`)
+- `_quarto.yml` — project config: render list + shared-libs post-render hook
+- `_includes/` + `assets/site.css` — shared site shell for posts
+- `scripts/share_quarto_libs.py` — post-render hook deduplicating Quarto libs
 - `assets/gl-components/gl.js` — figure component library (house style lives here)
 - `assets/gl-components/model-colors.js` — canonical provider colours/names
 - `assets/gl-comments/gl-comments.js` — staging review client
