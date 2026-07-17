@@ -1,0 +1,8 @@
+# Quarto include partials are intentionally unbalanced HTML fragments
+# (post-before/_header open tags that post-after closes). Formatters
+# "fix" the unclosed tags and break the page shell.
+_includes/
+blog/posts/*/_header.html
+blog/posts/*/_head-extra.html
+# rendered output — not source
+blog/posts/*/index.html
