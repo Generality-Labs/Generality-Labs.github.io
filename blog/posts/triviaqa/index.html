@@ -167,13 +167,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <blockquote>
 <p>TriviaQA includes 95K question-answer pairs authored by trivia enthusiasts and independently gathered evidence documents, six per question on average.</p>
 </blockquote>
-<p>It was originally intended as a “reading comprehension dataset”. For each question–answer pair it provides evidence documents which are likely (but not guaranteed) to contain the answer to the question. The documents were gathered automatically from Wikipedia and web search results. The dataset was originally intended for ML models far weaker than current AIs — the original paper evaluates an RNN on evidence docs, which scores 40%, far below the 80% human baseline.</p>
-<p>In recent years the dataset has been used in a different mode — <strong>closed book</strong>. The model isn’t provided with evidence docs, nor is it allowed to use web search. It answers using only internal knowledge. All of Epoch’s external runs for this dataset are done in this mode (manually verified by checking each paper).</p>
-<p>That said, some papers still incorrectly describe this dataset as “reading comprehension” despite clearly using it in the closed-book mode, for example:</p>
+<p>It was originally intended as a “reading comprehension dataset”. For each question–answer pair it provides evidence documents which are likely (but not guaranteed) to contain the answer to the question. The documents were gathered automatically from Wikipedia and web search results. The dataset was intended for ML models far weaker than the current AIs. For example, the paper evaluates an RNN, which scores 40%, far below the 80% human baseline.</p>
+<p>In recent years the dataset has been used in a different mode — <em>closed book</em>. The model isn’t provided with evidence docs, nor is it allowed to use web search. It has to answer using only internal knowledge. All of Epoch’s external runs for this dataset are done in this mode (manually verified by checking each paper).</p>
+<p>Despite this change, some papers still incorrectly describe this dataset as “reading comprehension” despite clearly using it in the closed-book mode, for example:</p>
 <ul>
-<li>Gemma: Open Models Based on Gemini Research and Technology</li>
-<li>Claude 2 Model Card</li>
-<li>Releasing Claude Instant 1.2</li>
+<li><a href="https://arxiv.org/pdf/2403.08295">Gemma: Open Models Based on Gemini Research and Technology</a></li>
+<li><a href="https://www-cdn.anthropic.com/5c49cc247484cecf107c699baf29250302e5da70/claude-2-model-card.pdf">Claude 2 Model Card</a></li>
+<li><a href="https://www.anthropic.com/news/releasing-claude-instant-1-2">Releasing Claude Instant 1.2</a></li>
 </ul>
 <p>Splits: 76.5k train / 9.9k validation / 9.5k test. The answers for the test split are not provided.</p>
 <h3 id="example-items" class="anchored">Example items</h3>
