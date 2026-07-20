@@ -47,5 +47,16 @@ tailwind:
 	npx --yes tailwindcss@3.4.17 -i assets/tw.input.css -o assets/tw.css \
 	  --content "$(TW_CONTENT)" --minify
 
+# Bundle components/ (JSX) into the committed static module assets/gl-react.js.
+# Real react/react-dom, bundled in — the artifact stays self-contained.
+react: node_modules
+	npx esbuild components/index.jsx --bundle --format=esm --minify \
+	  --jsx=automatic --define:process.env.NODE_ENV='"production"' \
+	  --outfile=assets/gl-react.js
+
+node_modules: package.json
+	npm install --silent
+	@touch node_modules
+
 clean-tools:
 	rm -rf .tools

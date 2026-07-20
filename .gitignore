@@ -1,5 +1,6 @@
 .tools/
 .quarto/
+node_modules/
 
 /.quarto/
 **/*.quarto_ipynb

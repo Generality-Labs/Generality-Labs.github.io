@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- Dev harness for the React bundle. Serve the repo root and open
+     /components/demo.html. Rebuild with `make react` after editing JSX. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>gl-react harness</title>
+    <style>
+      body { background: #fafafa; color: #1a1919; font-family: system-ui, sans-serif;
+        max-width: 48rem; margin: 3rem auto; padding: 0 1.25rem; }
+    </style>
+  </head>
+  <body>
+    <h1 style="font-size:1.4rem">gl-react harness</h1>
+    <p>automount path (shortcode-style placeholder, props coerced from strings):</p>
+    <div data-gl-react="HelloWorld" data-props='{"start":"7"}'></div>
+    <p>unknown-component error path:</p>
+    <div data-gl-react="NoSuchThing"></div>
+    <p>mount() path:</p>
+    <div id="mount"></div>
+    <script type="module">
+      const glr = await import("/assets/gl-react.js");
+      document.getElementById("mount").appendChild(glr.mount(glr.HelloWorld, { start: 3 }));
+    </script>
+  </body>
+</html>
