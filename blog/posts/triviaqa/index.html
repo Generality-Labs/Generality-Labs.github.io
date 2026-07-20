@@ -177,18 +177,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Splits: 76.5k train / 9.9k validation / 9.5k test. The answers for the test split are not provided.</p>
 <h3 id="example-items" class="anchored">Example items</h3>
-<blockquote>
-<p>In what year was the best foreign film category introduced to the Academy Awards?</p>
-<p><strong>1948</strong> — alias: “one thousand, nine hundred and forty-eight”</p>
-</blockquote>
-<blockquote>
-<p>What is the name of the strip of land between a golf tee and the green?</p>
-<p><strong>Fairway</strong> — aliases: “Fairway”, “Fair-way”, “Fair Way”, “Fairway (disambiguation)” [sic]</p>
-</blockquote>
-<blockquote>
-<p>Which locks control entry to the Panama canal from the Atlantic end?</p>
-<p><strong>Gatun Lock</strong> — aliases: “Gatun lock”, “Gatun Locks”, “Panama Canal Locks”, “Pedro Miguel Locks”, “Pedro Miguel lock”, “Panama Canal locks”, “Gatún lock”</p>
-</blockquote>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb2" data-startfrom="50" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 49;"><span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>gl<span class="op">.</span><span class="fu">glHfSamples</span>(<span class="kw">null</span><span class="op">,</span> [</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>  { <span class="dt">question</span><span class="op">:</span> <span class="st">"In what year was the best foreign film category introduced to the Academy Awards?"</span><span class="op">,</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    <span class="dt">answer</span><span class="op">:</span> { <span class="dt">value</span><span class="op">:</span> <span class="st">"1948"</span><span class="op">,</span> <span class="dt">aliases</span><span class="op">:</span> [<span class="st">"one thousand, nine hundred and forty-eight"</span>] } }<span class="op">,</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>  { <span class="dt">question</span><span class="op">:</span> <span class="st">"What is the name of the strip of land between a golf tee and the green?"</span><span class="op">,</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    <span class="dt">answer</span><span class="op">:</span> { <span class="dt">value</span><span class="op">:</span> <span class="st">"Fairway"</span><span class="op">,</span> <span class="dt">aliases</span><span class="op">:</span> [<span class="st">"Fair-way"</span><span class="op">,</span> <span class="st">"Fair Way"</span><span class="op">,</span> <span class="st">"Fairway (disambiguation)"</span>] } }<span class="op">,</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>  { <span class="dt">question</span><span class="op">:</span> <span class="st">"Which locks control entry to the Panama canal from the Atlantic end?"</span><span class="op">,</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    <span class="dt">answer</span><span class="op">:</span> { <span class="dt">value</span><span class="op">:</span> <span class="st">"Gatun Lock"</span><span class="op">,</span> <span class="dt">aliases</span><span class="op">:</span> [<span class="st">"Gatun Locks"</span><span class="op">,</span> <span class="st">"Panama Canal Locks"</span><span class="op">,</span> <span class="st">"Gatún lock"</span>] } }<span class="op">,</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>]<span class="op">,</span> {</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>  <span class="dt">dataset</span><span class="op">:</span> <span class="st">"mandarjoshi/trivia_qa"</span><span class="op">,</span> <span class="dt">config</span><span class="op">:</span> <span class="st">"rc.nocontext"</span><span class="op">,</span> <span class="dt">split</span><span class="op">:</span> <span class="st">"validation"</span><span class="op">,</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>  <span class="dt">columns</span><span class="op">:</span> [<span class="st">"question"</span><span class="op">,</span> <span class="st">"answer"</span>]<span class="op">,</span> <span class="dt">count</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>  <span class="dt">format</span><span class="op">:</span> { <span class="dt">answer</span><span class="op">:</span> (a) <span class="kw">=&gt;</span> a<span class="op">?.</span><span class="at">value</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> a<span class="op">.</span><span class="at">value</span> <span class="op">+</span> (a<span class="op">.</span><span class="at">aliases</span><span class="op">?.</span><span class="at">length</span> <span class="op">?</span> <span class="vs">`  ·  aliases: </span><span class="sc">${</span>a<span class="op">.</span><span class="at">aliases</span><span class="op">.</span><span class="fu">slice</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">4</span>)<span class="op">.</span><span class="fu">join</span>(<span class="st">", "</span>)<span class="sc">}</span><span class="vs">`</span> <span class="op">:</span> <span class="st">""</span>)</span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(a) }<span class="op">,</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>  <span class="dt">caption</span><span class="op">:</span> <span class="st">"TriviaQA validation items. Live rows come from the dataset viewer API and reflect the current dataset revision (shown in the footer) — not necessarily the snapshot we audited."</span><span class="op">,</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="ojs-cell-2" data-nodetype="expression">
+
+</div>
+</div>
+</div>
 <h2 id="construct-validity" class="anchored">Construct validity</h2>
 <p>While the original paper describes the dataset as “reading comprehension”, in the closed-book mode it becomes a general QA dataset — there is nothing for the model to read, aside from the question text.</p>
 <p>What is the dataset measuring then? Perhaps “breadth of factual trivia-like knowledge (prior to 2017) and the ability to retrieve it”. It’s hard to pinpoint the construct more exactly — the authors don’t balance the dataset in any way.</p>
@@ -259,7 +269,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </footer>
 <script type="ojs-module-contents">
-eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImdsVmVyc2lvbiA9IFwiZGV2XCJcbmdsID0gaW1wb3J0KGAvYXNzZXRzL2dsLWNvbXBvbmVudHMvZ2wuanM/dj0ke2dsVmVyc2lvbn1gKVxubWMgPSBpbXBvcnQoYC9hc3NldHMvZ2wtY29tcG9uZW50cy9tb2RlbC1jb2xvcnMuanM/dj0ke2dsVmVyc2lvbn1gKVxuIn1dfQ==
+eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImdsVmVyc2lvbiA9IFwiZGV2XCJcbmdsID0gaW1wb3J0KGAvYXNzZXRzL2dsLWNvbXBvbmVudHMvZ2wuanM/dj0ke2dsVmVyc2lvbn1gKVxubWMgPSBpbXBvcnQoYC9hc3NldHMvZ2wtY29tcG9uZW50cy9tb2RlbC1jb2xvcnMuanM/dj0ke2dsVmVyc2lvbn1gKVxuIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0IiwiY2VsbE5hbWUiOiJvanMtY2VsbC0yIiwiaW5saW5lIjpmYWxzZSwic291cmNlIjoiZ2wuZ2xIZlNhbXBsZXMobnVsbCwgW1xuICB7IHF1ZXN0aW9uOiBcIkluIHdoYXQgeWVhciB3YXMgdGhlIGJlc3QgZm9yZWlnbiBmaWxtIGNhdGVnb3J5IGludHJvZHVjZWQgdG8gdGhlIEFjYWRlbXkgQXdhcmRzP1wiLFxuICAgIGFuc3dlcjogeyB2YWx1ZTogXCIxOTQ4XCIsIGFsaWFzZXM6IFtcIm9uZSB0aG91c2FuZCwgbmluZSBodW5kcmVkIGFuZCBmb3J0eS1laWdodFwiXSB9IH0sXG4gIHsgcXVlc3Rpb246IFwiV2hhdCBpcyB0aGUgbmFtZSBvZiB0aGUgc3RyaXAgb2YgbGFuZCBiZXR3ZWVuIGEgZ29sZiB0ZWUgYW5kIHRoZSBncmVlbj9cIixcbiAgICBhbnN3ZXI6IHsgdmFsdWU6IFwiRmFpcndheVwiLCBhbGlhc2VzOiBbXCJGYWlyLXdheVwiLCBcIkZhaXIgV2F5XCIsIFwiRmFpcndheSAoZGlzYW1iaWd1YXRpb24pXCJdIH0gfSxcbiAgeyBxdWVzdGlvbjogXCJXaGljaCBsb2NrcyBjb250cm9sIGVudHJ5IHRvIHRoZSBQYW5hbWEgY2FuYWwgZnJvbSB0aGUgQXRsYW50aWMgZW5kP1wiLFxuICAgIGFuc3dlcjogeyB2YWx1ZTogXCJHYXR1biBMb2NrXCIsIGFsaWFzZXM6IFtcIkdhdHVuIExvY2tzXCIsIFwiUGFuYW1hIENhbmFsIExvY2tzXCIsIFwiR2F0w7puIGxvY2tcIl0gfSB9LFxuXSwge1xuICBkYXRhc2V0OiBcIm1hbmRhcmpvc2hpL3RyaXZpYV9xYVwiLCBjb25maWc6IFwicmMubm9jb250ZXh0XCIsIHNwbGl0OiBcInZhbGlkYXRpb25cIixcbiAgY29sdW1uczogW1wicXVlc3Rpb25cIiwgXCJhbnN3ZXJcIl0sIGNvdW50OiAzLFxuICBmb3JtYXQ6IHsgYW5zd2VyOiAoYSkgPT4gYT8udmFsdWVcbiAgICA/IGEudmFsdWUgKyAoYS5hbGlhc2VzPy5sZW5ndGggPyBgICDCtyAgYWxpYXNlczogJHthLmFsaWFzZXMuc2xpY2UoMCwgNCkuam9pbihcIiwgXCIpfWAgOiBcIlwiKVxuICAgIDogSlNPTi5zdHJpbmdpZnkoYSkgfSxcbiAgY2FwdGlvbjogXCJUcml2aWFRQSB2YWxpZGF0aW9uIGl0ZW1zLiBMaXZlIHJvd3MgY29tZSBmcm9tIHRoZSBkYXRhc2V0IHZpZXdlciBBUEkgYW5kIHJlZmxlY3QgdGhlIGN1cnJlbnQgZGF0YXNldCByZXZpc2lvbiAoc2hvd24gaW4gdGhlIGZvb3Rlcikg4oCUIG5vdCBuZWNlc3NhcmlseSB0aGUgc25hcHNob3Qgd2UgYXVkaXRlZC5cIixcbn0pXG4ifV19
 </script>
 <script type="module">
 if (window.location.protocol === "file:") { alert("The OJS runtime does not work with file:// URLs. Please use a web server to view this document."); }

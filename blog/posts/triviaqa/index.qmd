@@ -46,17 +46,24 @@ Splits: 76.5k train / 9.9k validation / 9.5k test. The answers for the test spli
 
 ### Example items
 
-> In what year was the best foreign film category introduced to the Academy Awards?
->
-> **1948** — alias: "one thousand, nine hundred and forty-eight"
-
-> What is the name of the strip of land between a golf tee and the green?
->
-> **Fairway** — aliases: "Fairway", "Fair-way", "Fair Way", "Fairway (disambiguation)" [sic]
-
-> Which locks control entry to the Panama canal from the Atlantic end?
->
-> **Gatun Lock** — aliases: "Gatun lock", "Gatun Locks", "Panama Canal Locks", "Pedro Miguel Locks", "Pedro Miguel lock", "Panama Canal locks", "Gatún lock"
+```{ojs}
+//| echo: false
+gl.glHfSamples(null, [
+  { question: "In what year was the best foreign film category introduced to the Academy Awards?",
+    answer: { value: "1948", aliases: ["one thousand, nine hundred and forty-eight"] } },
+  { question: "What is the name of the strip of land between a golf tee and the green?",
+    answer: { value: "Fairway", aliases: ["Fair-way", "Fair Way", "Fairway (disambiguation)"] } },
+  { question: "Which locks control entry to the Panama canal from the Atlantic end?",
+    answer: { value: "Gatun Lock", aliases: ["Gatun Locks", "Panama Canal Locks", "Gatún lock"] } },
+], {
+  dataset: "mandarjoshi/trivia_qa", config: "rc.nocontext", split: "validation",
+  columns: ["question", "answer"], count: 3,
+  format: { answer: (a) => a?.value
+    ? a.value + (a.aliases?.length ? `  ·  aliases: ${a.aliases.slice(0, 4).join(", ")}` : "")
+    : JSON.stringify(a) },
+  caption: "TriviaQA validation items. Live rows come from the dataset viewer API and reflect the current dataset revision (shown in the footer) — not necessarily the snapshot we audited.",
+})
+```
 
 ## Construct validity
 
