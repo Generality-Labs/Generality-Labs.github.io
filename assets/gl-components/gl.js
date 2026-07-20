@@ -1445,31 +1445,38 @@ export function glQuestionTriplet(_, rows, spec = {}) {
 
 /* ------------------------------------------------------------ glHfSamples */
 // Hugging-Face-dataset-viewer-style table of sample rows with a refresh
-// button that draws a fresh random window live from the datasets-server
-// /rows API (CORS-open; serves the CURRENT revision only, no pinning —
-// anything that must stay true to the audited snapshot belongs in seedRows).
+// button that draws a fresh random window from the dataset. Two live modes:
+//   · unpinned (default): the datasets-server /rows API — always the CURRENT
+//     revision, no way to pin (the API has no revision parameter).
+//   · pinned: spec.pin reads the parquet export at a fixed commit of the
+//     refs/convert/parquet branch via HTTP range requests — the exact
+//     audited snapshot forever, no server. Requires the hyparquet dep:
+//     glHfSamples({ hyparquet }, seeds, { …, pin: { revision, file } })
+//     with hyparquet imported from /assets/vendor/hyparquet.mjs.
 // Seeds render immediately and deterministically (offline-safe); the live
 // fetch happens only on refresh, or on load when no seeds are given. The
-// footer reports the served slice and the revision sha from X-Revision.
-//   seedRows: rows shown on load and used as fallback when the API fails.
+// footer reports the served slice and revision (X-Revision header when
+// unpinned, the pinned sha otherwise).
+//   seedRows: rows shown on load and used as fallback when the fetch fails.
 //   spec: { dataset, config, split,  — HF ids, e.g. "mandarjoshi/trivia_qa"
 //           count = 3,               — rows per draw
 //           columns,                 — subset/order of columns (default: all)
 //           format = {},             — per-column value -> display string
+//           pin,                     — { revision: <sha of refs/convert/parquet>,
+//                                        file: "cfg/split/0000.parquet" }
 //           caption }
 const HFS_API = "https://datasets-server.huggingface.co";
 const HFS_SIZES = new Map(); // "ds|cfg|split" -> promise of split row count
+const HFS_PINS = new Map(); // pinned parquet url -> promise of {file, metadata, total}
 
 const HFS_CSS = `
   .gl-hfs { border: 1px solid ${palette.hairline}; border-radius: 12px; background: #fff;
     font-family: ${FONT}; overflow: hidden; }
-  .gl-hfs-bar { display: flex; justify-content: space-between; align-items: baseline; gap: .8rem;
+  .gl-hfs-bar { display: flex; justify-content: space-between; align-items: center; gap: .8rem;
     padding: .6rem .95rem; border-bottom: 1px solid ${palette.hairline}; background: ${palette.paper}; }
   .gl-hfs-id { font-family: "Geist Mono", monospace; font-size: .74rem; color: ${palette.muted}; }
   .gl-hfs-id a { color: ${palette.mintDeep}; text-decoration: none;
     border-bottom: 1px solid ${palette.mintEdge}; }
-  .gl-hfs-badge { font-family: "Geist Mono", monospace; font-size: .66rem; letter-spacing: .07em;
-    text-transform: uppercase; color: ${palette.soft}; white-space: nowrap; }
   .gl-hfs-scroll { overflow-x: auto; }
   .gl-hfs table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: .86rem; }
   .gl-hfs th { text-align: left; font-weight: 600; font-size: .74rem; color: ${palette.ink};
@@ -1479,16 +1486,17 @@ const HFS_CSS = `
   .gl-hfs td { padding: .55rem .75rem; border-bottom: 1px solid #f0f0f0; vertical-align: top;
     color: ${palette.ink}; line-height: 1.45; overflow-wrap: break-word; }
   .gl-hfs td > div { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-    overflow: hidden; }
+    overflow: hidden; height: 4.35em; }
   .gl-hfs .idx { width: 5.6em; padding-left: .4rem; padding-right: .6rem; text-align: right;
     font-family: "Geist Mono", monospace; font-size: .68rem; color: ${palette.soft};
     white-space: nowrap; overflow-wrap: normal; }
   .gl-hfs tbody { transition: opacity .18s ease; }
   .gl-hfs tbody tr:hover { background: ${palette.bg}; }
   .gl-hfs tbody tr:last-child td { border-bottom: none; }
-  .gl-hfs-foot { display: flex; justify-content: space-between; align-items: center; gap: .8rem;
-    padding: .5rem .95rem; border-top: 1px solid ${palette.hairline}; }
-  .gl-hfs-status { font-family: "Geist Mono", monospace; font-size: .68rem; color: ${palette.soft}; }
+  .gl-hfs-hd { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
+  .gl-hfs-status { display: block; font-family: "Geist Mono", monospace; font-size: .68rem;
+    color: ${palette.soft}; line-height: 1.5; min-height: 1.5em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gl-hfs-status.err { color: #b4443c; }
   .gl-hfs-btn { background: transparent; color: ${palette.mintDeep};
     border: 1px solid ${palette.mintEdge}; border-radius: 999px; padding: .4rem .95rem;
@@ -1498,7 +1506,7 @@ const HFS_CSS = `
   .gl-hfs-btn:disabled { opacity: .45; cursor: default; }
 `;
 
-export function glHfSamples(_, seedRows, spec = {}) {
+export function glHfSamples(deps, seedRows, spec = {}) {
   const {
     dataset,
     config,
@@ -1507,7 +1515,9 @@ export function glHfSamples(_, seedRows, spec = {}) {
     columns,
     format = {},
     caption,
+    pin,
   } = spec;
+  const hyparquet = deps?.hyparquet;
   injectOnce("gl-hfs-css", HFS_CSS);
   const seeds = (seedRows ?? []).slice();
   let cols =
@@ -1520,23 +1530,21 @@ export function glHfSamples(_, seedRows, spec = {}) {
   const hfUrl = `https://huggingface.co/datasets/${dataset}`;
   card.innerHTML = `
     <div class="gl-hfs-bar">
-      <span class="gl-hfs-id">${
-        dataset
-          ? `<a href="${hfUrl}" target="_blank" rel="noopener">${esc(dataset)}</a>
+      <div class="gl-hfs-hd">
+        <span class="gl-hfs-id">${
+          dataset
+            ? `<a href="${hfUrl}" target="_blank" rel="noopener">${esc(dataset)}</a>
         · ${esc(config)} · ${esc(split)}`
-          : "committed sample"
-      }</span>
-      <span class="gl-hfs-badge" data-role="badge"></span>
+            : "committed sample"
+        }</span>
+        <span class="gl-hfs-status" data-role="status"></span>
+      </div>
+      <button class="gl-hfs-btn">↻ ${dataset ? (pin ? "sample the pinned dataset" : "sample the live dataset") : "shuffle"}</button>
     </div>
     <div class="gl-hfs-scroll"><table>
       <thead><tr></tr></thead><tbody></tbody>
-    </table></div>
-    <div class="gl-hfs-foot">
-      <span class="gl-hfs-status" data-role="status"></span>
-      <button class="gl-hfs-btn">↻ ${dataset ? "sample the live dataset" : "shuffle"}</button>
-    </div>`;
-  const [badge, thead, tbody, status, btn] = [
-    card.querySelector('[data-role="badge"]'),
+    </table></div>`;
+  const [thead, tbody, status, btn] = [
     card.querySelector("thead tr"),
     card.querySelector("tbody"),
     card.querySelector('[data-role="status"]'),
@@ -1551,6 +1559,20 @@ export function glHfSamples(_, seedRows, spec = {}) {
         : v == null
           ? ""
           : JSON.stringify(v);
+  // JS-value fallback for the header dtype sublabels — used for seed rows and
+  // pinned parquet rows; the unpinned API path overrides with real dtypes.
+  const typeLabel = (v) =>
+    typeof v === "string"
+      ? "string"
+      : typeof v === "number"
+        ? "double"
+        : typeof v === "bigint"
+          ? "int64"
+          : Array.isArray(v)
+            ? "list"
+            : v && typeof v === "object"
+              ? "struct"
+              : "";
   const head = () => {
     thead.innerHTML =
       `<th class="idx">#</th>` +
@@ -1571,8 +1593,7 @@ export function glHfSamples(_, seedRows, spec = {}) {
       )
       .join("");
   };
-  const set = (b, s, err = false) => {
-    badge.textContent = b;
+  const set = (s, err = false) => {
     status.textContent = s;
     status.classList.toggle("err", err);
   };
@@ -1585,10 +1606,12 @@ export function glHfSamples(_, seedRows, spec = {}) {
             .sort(() => Math.random() - 0.5)
             .slice(0, count)
         : seeds;
+    for (const c of cols)
+      if (types[c] == null) types[c] = typeLabel(rows[0]?.[c]);
     head();
     body(rows.map((row) => ({ idx: row.row_idx ?? "—", row })));
     console.log("[glHfSamples] seed rows:", rows);
-    set("audit sample", label);
+    set(label);
   };
 
   const sizeOf = () => {
@@ -1605,11 +1628,74 @@ export function glHfSamples(_, seedRows, spec = {}) {
     return HFS_SIZES.get(key);
   };
 
-  async function draw() {
-    if (!dataset) return showSeeds("committed sample · shuffled");
+  // Pinned mode: lazily open the parquet file at the pinned revision (footer
+  // metadata is fetched once per url and shared across instances); each draw
+  // then range-reads only the row group covering the random window.
+  const pinnedSource = () => {
+    const url = `https://huggingface.co/datasets/${dataset}/resolve/${pin.revision}/${pin.file}`;
+    if (!HFS_PINS.has(url))
+      HFS_PINS.set(
+        url,
+        (async () => {
+          const file = await hyparquet.asyncBufferFromUrl({ url });
+          const metadata = await hyparquet.parquetMetadataAsync(file);
+          return { file, metadata, total: Number(metadata.num_rows) };
+        })(),
+      );
+    return HFS_PINS.get(url);
+  };
+
+  async function drawPinned() {
     btn.disabled = true;
     tbody.style.opacity = ".35";
-    set(badge.textContent, "fetching…");
+    set("reading pinned parquet…");
+    try {
+      const { file, metadata, total } = await pinnedSource();
+      const offset = Math.floor(Math.random() * Math.max(1, total - count));
+      const rows = await hyparquet.parquetReadObjects({
+        file,
+        metadata,
+        columns: cols.length ? cols : undefined,
+        rowStart: offset,
+        rowEnd: offset + count,
+      });
+      console.log(
+        `[glHfSamples] ${dataset} ${pin.file} rows ${offset}–${offset + count - 1}` +
+          ` of ${total} rev=${pin.revision.slice(0, 7)} (pinned) — raw rows:`,
+        rows,
+      );
+      if (!cols.length) cols = Object.keys(rows[0] ?? {});
+      types = Object.fromEntries(cols.map((c) => [c, typeLabel(rows[0]?.[c])]));
+      head();
+      body(rows.map((row, i) => ({ idx: offset + i, row })));
+      set(
+        `rows ${offset.toLocaleString()}–${(offset + count - 1).toLocaleString()}` +
+          ` of ${total.toLocaleString()} · rev ${pin.revision.slice(0, 7)} (pinned)`,
+      );
+    } catch (e) {
+      console.warn("[glHfSamples] pinned read failed:", e);
+      if (seeds.length)
+        showSeeds("pinned read failed — committed sample shown");
+      else set(`pinned read failed (${e.message}) — try again`, true);
+    } finally {
+      btn.disabled = false;
+      tbody.style.opacity = "1";
+    }
+  }
+
+  async function draw() {
+    if (!dataset) return showSeeds("committed sample · shuffled");
+    if (pin) {
+      if (!hyparquet)
+        return set(
+          "spec.pin needs the hyparquet dep: glHfSamples({ hyparquet }, …)",
+          true,
+        );
+      return drawPinned();
+    }
+    btn.disabled = true;
+    tbody.style.opacity = ".35";
+    set("fetching…");
     try {
       const total = await sizeOf();
       const offset = Math.floor(Math.random() * Math.max(1, total - count));
@@ -1635,14 +1721,13 @@ export function glHfSamples(_, seedRows, spec = {}) {
       head();
       body(data.rows.map((r) => ({ idx: r.row_idx, row: r.row })));
       set(
-        "live · unpinned",
         `rows ${offset.toLocaleString()}–${(offset + count - 1).toLocaleString()}` +
           ` of ${total.toLocaleString()}${rev ? ` · rev ${rev}` : ""}`,
       );
     } catch (e) {
       console.warn("[glHfSamples] live fetch failed:", e);
       if (seeds.length) showSeeds("live fetch failed — committed sample shown");
-      else set("error", `live fetch failed (${e.message}) — try again`, true);
+      else set(`live fetch failed (${e.message}) — try again`, true);
     } finally {
       btn.disabled = false;
       tbody.style.opacity = "1";
@@ -1650,8 +1735,7 @@ export function glHfSamples(_, seedRows, spec = {}) {
   }
 
   btn.onclick = draw;
-  if (seeds.length)
-    showSeeds("the three items examined above — refresh for live rows");
+  if (seeds.length) showSeeds("");
   else draw();
   return frame(card, { caption });
 }

@@ -18,6 +18,7 @@ format:
 glVersion = "dev"
 gl = import(`/assets/gl-components/gl.js?v=${glVersion}`)
 mc = import(`/assets/gl-components/model-colors.js?v=${glVersion}`)
+hyparquet = import(`/assets/vendor/hyparquet.mjs?v=${glVersion}`)
 ```
 
 ## Summary of findings
@@ -48,7 +49,7 @@ Splits: 76.5k train / 9.9k validation / 9.5k test. The answers for the test spli
 
 ```{ojs}
 //| echo: false
-gl.glHfSamples(null, [
+gl.glHfSamples({ hyparquet }, [
   { question: "In what year was the best foreign film category introduced to the Academy Awards?",
     answer: { value: "1948", aliases: ["one thousand, nine hundred and forty-eight"] } },
   { question: "What is the name of the strip of land between a golf tee and the green?",
@@ -57,11 +58,16 @@ gl.glHfSamples(null, [
     answer: { value: "Gatun Lock", aliases: ["Gatun Locks", "Panama Canal Locks", "Gatún lock"] } },
 ], {
   dataset: "mandarjoshi/trivia_qa", config: "rc.nocontext", split: "validation",
+  // Pinned to the refs/convert/parquet commit current at audit time (July
+  // 2026): samples always come from this exact snapshot, regardless of any
+  // future dataset changes. Rows are range-read straight from the parquet
+  // shard in the reader's browser — no server, no copy in the repo.
+  pin: { revision: "bd67746ffd85804fdc6b2ec5b00222ea26f8117e",
+         file: "rc.nocontext/validation/0000.parquet" },
   columns: ["question", "answer"], count: 3,
   format: { answer: (a) => a?.value
     ? a.value + (a.aliases?.length ? `  ·  aliases: ${a.aliases.slice(0, 4).join(", ")}` : "")
     : JSON.stringify(a) },
-  caption: "TriviaQA validation items. Live rows come from the dataset viewer API and reflect the current dataset revision (shown in the footer) — not necessarily the snapshot we audited.",
 })
 ```
 
