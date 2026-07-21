@@ -2,6 +2,11 @@
 # lists merge (concatenate) across project and document config — defaults
 # would double-inject headers into the existing forecasting post. Shared
 # chrome lives in _includes/ and each post opts in from its own frontmatter.
+# The react extension's ```jsx fence filter (no-op on documents without jsx
+# cells, so safe to apply project-wide; the shortcode needs no registration).
+filters:
+  - react
+
 project:
   type: default
   # Hoist each post's private Quarto runtime (index_files/libs/, ~1MB) into

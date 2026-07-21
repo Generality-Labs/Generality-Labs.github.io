@@ -16,10 +16,11 @@ else
 endif
 QUARTO_URL := https://github.com/quarto-dev/quarto-cli/releases/download/v$(QUARTO_VERSION)/$(QUARTO_ASSET)
 
-.PHONY: setup build render-quarto preview compare tailwind clean-tools
+.PHONY: setup build render-quarto preview compare tailwind react clean-tools
 
-# Everything derived-and-committed in one go: rendered posts + compiled CSS.
-build: render-quarto tailwind
+# Everything derived-and-committed in one go: rendered posts + compiled CSS +
+# the React component bundle (the CI check regenerates all three via this).
+build: render-quarto tailwind react
 
 setup: $(QUARTO)
 
@@ -29,8 +30,9 @@ $(QUARTO):
 	$(QUARTO) --version
 
 # Renders every post in the _quarto.yml render list (in place, next to its
-# .qmd).
-render-quarto: $(QUARTO)
+# .qmd). The frozen forecasting post is excluded there; render it explicitly
+# by path if you ever need to regenerate it.
+render: $(QUARTO) react
 	$(QUARTO) render
 
 # Preview one post with re-render on save (default-type projects can't
@@ -46,6 +48,17 @@ TW_CONTENT := ./index.html,./blog/index.html,./blog/posts/why-are-evaluations-br
 tailwind:
 	npx --yes tailwindcss@3.4.17 -i assets/tw.input.css -o assets/tw.css \
 	  --content "$(TW_CONTENT)" --minify
+
+# Bundle components/ (JSX) into the committed static module assets/gl-react.js.
+# Real react/react-dom, bundled in — the artifact stays self-contained.
+react: node_modules
+	npx esbuild components/index.jsx --bundle --format=esm --minify \
+	  --jsx=automatic --define:process.env.NODE_ENV='"production"' \
+	  --outfile=assets/gl-react.js
+
+node_modules: package.json
+	npm install --silent
+	@touch node_modules
 
 clean-tools:
 	rm -rf .tools
