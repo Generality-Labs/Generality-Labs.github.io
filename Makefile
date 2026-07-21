@@ -29,8 +29,9 @@ $(QUARTO):
 	$(QUARTO) --version
 
 # Renders every post in the _quarto.yml render list (in place, next to its
-# .qmd).
-render-quarto: $(QUARTO)
+# .qmd). The frozen forecasting post is excluded there; render it explicitly
+# by path if you ever need to regenerate it.
+render: $(QUARTO) react
 	$(QUARTO) render
 
 # Preview one post with re-render on save (default-type projects can't
