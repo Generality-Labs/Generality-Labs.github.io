@@ -1452,7 +1452,7 @@ export function glQuestionTriplet(_, rows, spec = {}) {
 //     refs/convert/parquet branch via HTTP range requests — the exact
 //     audited snapshot forever, no server. Requires the hyparquet dep:
 //     glHfSamples({ hyparquet }, seeds, { …, pin: { revision, file } })
-//     with hyparquet imported from /assets/vendor/hyparquet.mjs.
+//     with hyparquet imported from /assets/third-party/hyparquet.mjs.
 // Seeds render immediately and deterministically (offline-safe); the live
 // fetch happens only on refresh, or on load when no seeds are given. The
 // footer reports the served slice and revision (X-Revision header when

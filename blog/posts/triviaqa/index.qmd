@@ -18,7 +18,7 @@ format:
 glVersion = "dev"
 gl = import(`/assets/gl-components/gl.js?v=${glVersion}`)
 mc = import(`/assets/gl-components/model-colors.js?v=${glVersion}`)
-hyparquet = import(`/assets/vendor/hyparquet.mjs?v=${glVersion}`)
+hyparquet = import(`/assets/third-party/hyparquet.mjs?v=${glVersion}`)
 ```
 
 ## Summary of findings
