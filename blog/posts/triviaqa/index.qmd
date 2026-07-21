@@ -1,0 +1,155 @@
+---
+pagetitle: "TriviaQA Audit Report - Generality Labs"
+format:
+  html:
+    page-layout: custom
+    theme: none
+    include-in-header: ../../../_includes/head.html
+    include-before-body:
+      - ../../../_includes/post-before.html
+      - _header.html
+    include-after-body: ../../../_includes/post-after.html
+    link-external-newwindow: true
+    embed-resources: false
+---
+
+```{ojs}
+//| echo: false
+glVersion = "dev"
+gl = import(`/assets/gl-components/gl.js?v=${glVersion}`)
+mc = import(`/assets/gl-components/model-colors.js?v=${glVersion}`)
+hyparquet = import(`/assets/third-party/hyparquet.mjs?v=${glVersion}`)
+```
+
+## Summary of findings
+
+- **Saturated.** The dashboard max is 87.6%. Opus 4.8 scores 89% (on a subset of 500 questions). We estimate the realistic ceiling of this dataset at ≈92%.
+- **Contaminated by design.** Questions are scraped from trivia websites.
+- Displays a **mild inverted-U relationship** with ECI and compute on the Epoch dashboard.
+
+## What is TriviaQA?
+
+TriviaQA is introduced in the 2017 paper ["TriviaQA: A Large Scale Distantly Supervised Challenge Dataset for Reading Comprehension"](https://arxiv.org/abs/1705.03551):
+
+> TriviaQA includes 95K question-answer pairs authored by trivia enthusiasts and independently gathered evidence documents, six per question on average.
+
+It was originally intended as a "reading comprehension dataset". For each question–answer pair it provides evidence documents which are likely (but not guaranteed) to contain the answer to the question. The documents were gathered automatically from Wikipedia and web search results. The dataset was intended for ML models far weaker than the current AIs. For example, the  paper evaluates an RNN, which scores 40%, far below the 80% human baseline.
+
+In recent years the dataset has been used in a different mode — _closed book_. The model isn't provided with evidence docs, nor is it allowed to use web search. It has to answer using only internal knowledge. All of Epoch's external runs for this dataset are done in this mode (manually verified by checking each paper).
+
+Despite this change, some papers still incorrectly describe this dataset as "reading comprehension" despite clearly using it in the closed-book mode, for example:
+
+- [Gemma: Open Models Based on Gemini Research and Technology](https://arxiv.org/pdf/2403.08295)
+- [Claude 2 Model Card](https://www-cdn.anthropic.com/5c49cc247484cecf107c699baf29250302e5da70/claude-2-model-card.pdf)
+- [Releasing Claude Instant 1.2](https://www.anthropic.com/news/releasing-claude-instant-1-2)
+
+Splits: 76.5k train / 9.9k validation / 9.5k test. The answers for the test split are not provided.
+
+### Example items
+
+```{ojs}
+//| echo: false
+gl.glHfSamples({ hyparquet }, [
+  { question: "In what year was the best foreign film category introduced to the Academy Awards?",
+    answer: { value: "1948", aliases: ["one thousand, nine hundred and forty-eight"] } },
+  { question: "What is the name of the strip of land between a golf tee and the green?",
+    answer: { value: "Fairway", aliases: ["Fair-way", "Fair Way", "Fairway (disambiguation)"] } },
+  { question: "Which locks control entry to the Panama canal from the Atlantic end?",
+    answer: { value: "Gatun Lock", aliases: ["Gatun Locks", "Panama Canal Locks", "Gatún lock"] } },
+], {
+  dataset: "mandarjoshi/trivia_qa", config: "rc.nocontext", split: "validation",
+  // Pinned to the refs/convert/parquet commit current at audit time (July
+  // 2026): samples always come from this exact snapshot, regardless of any
+  // future dataset changes. Rows are range-read straight from the parquet
+  // shard in the reader's browser — no server, no copy in the repo.
+  pin: { revision: "bd67746ffd85804fdc6b2ec5b00222ea26f8117e",
+         file: "rc.nocontext/validation/0000.parquet" },
+  columns: ["question", "answer"], count: 3,
+  format: { answer: (a) => a?.value
+    ? a.value + (a.aliases?.length ? `  ·  aliases: ${a.aliases.slice(0, 4).join(", ")}` : "")
+    : JSON.stringify(a) },
+})
+```
+
+## Construct validity
+
+While the original paper describes the dataset as "reading comprehension", in the closed-book mode it becomes a general QA dataset — there is nothing for the model to read, aside from the question text.
+
+What is the dataset measuring then? Perhaps "breadth of factual trivia-like knowledge (prior to 2017) and the ability to retrieve it". It's hard to pinpoint the construct more exactly — the authors don't balance the dataset in any way.
+
+From looking at the individual items, the distribution is skewed toward US/UK pop culture, sports, and Western history, and it's English-only — it's unclear if the score would generalise well to multilingual or non-Western factual knowledge.
+
+For humans this closed-book version would measure some forms of crystallised intelligence. Knowledge is hard-won for humans, so the ability to quickly retrieve factual knowledge can be used as a proxy for general intelligence. However, for an AI, knowledge arises as a byproduct of compressing the training data, and thus the case for it correlating with forms of crystallised intelligence is weaker.
+
+## Outcome validity (scoring)
+
+The dataset provides a correct answer (with aliases) for the train/validation subsets. There is an official scoring script. Papers from which Epoch takes their data score via the "exact match" ("EM") method. It compares model output to the gold truth (and its aliases) after applying normalisation. The score is accuracy: the percentage of matches, where a match for an item means a match with any of the aliases.
+
+The normalisation applies four transformations to both prediction and reference: lowercase everything, remove punctuation, remove the English articles "a", "an", "the", and collapse extra whitespace. Then it requires the resulting strings to be character-for-character identical.
+
+There is no way to abstain from giving an answer — wrong answers are scored as 0, the same as no answer. The drawback of this dataset is that it doesn't measure anything related to epistemic calibration.
+
+## Saturation
+
+Saturated for several years:
+
+- The Epoch dashboard page (with "Frontier trend only" enabled)
+- LLM stats lists some newer models
+
+Scores for the current frontier models are not provided on either leaderboard.
+
+The original paper lists 79.7% as the human performance level (with the evidence docs). There are multiple top scores in the 80+% range, with the max being 87.6%.
+
+However, these do not come from the current frontier models. To evaluate whether there is any room for realistic improvement, we ran Opus 4.8 on 500 samples and then used an LLM judge (also Opus 4.8, but with web search) to classify the reasons for the model giving a wrong answer.
+
+Opus 4.8 correctly answered 445 out of 500 questions (89%). Most of the wrong answers are inexact matches — the model giving a correct answer that doesn't match any of the provided aliases for the "gold truth", for example:
+
+> Which World War 2 American general was known as 'Vinegar Joe'?
+>
+> Model answer: **Joseph Stilwell**. Gold truth: "Stilwell" (aliases: "Stillwell", "Stilwell (disambiguation)")
+
+There are occasional outdated questions, for example:
+
+> Who is currently the Supreme Governor of the Church of England?
+>
+> Model answer: **King Charles III**. Gold truth: "Queen Elizabeth II" (correct at the time of collection, but she's dead now)
+
+> In geology, Greywacke is classed as what form of sedimentary rock?
+>
+> Model answer: **Sandstone**. Gold truth: "Deep Ocean" (incorrect — Wikipedia lists "Sandstone")
+
+Some questions had missing information, for example: "In which town in Greater Manchester is the TV series set?" (no TV series name — maybe the question was supposed to have a picture?) or "Measuring from the closest point of each of these countries to the equator, which is the furthest from the equator?" (no list of countries).
+
+There are only 17 / 500 questions where Opus 4.8 was cleanly and clearly wrong — 3.4%. Verdict: the benchmark is basically saturated; the actual realistic ceiling is ≈92% (0.89 + 0.034).
+
+## Contamination
+
+Contaminated by design. It originally contains scraped trivia questions: "First we gathered question-answer pairs from 14 trivia and quiz-league websites". Even if the canonical version of the dataset is filtered out of the training data, these trivia question sets are unlikely to be removed.
+
+From "A Comprehensive Survey of Contamination Detection Methods in Large Language Models":
+
+> [...] the Llama pre-training corpus and The Pile (Gao et al., 2020) are found to be contaminated for many popular evaluation benchmarks, notably BigBench, HellaSwag, PiQA, MMLU and TriviaQA
+
+From "Generalization v.s. Memorization: Tracing Language Models' Capabilities Back to Pretraining Data":
+
+> Among the four tasks [TriviaQA, MMLU, WMT, and GSM8K], our analysis reveals that TriviaQA exhibits the strongest memorization effect, with task performance highly correlated to the n-gram distributions in the pretraining data.
+
+Additionally, ["Question and Answer Test-Train Overlap in Open-Domain Question Answering Datasets"](https://arxiv.org/abs/2008.02637) highlights significant test–train overlap.
+
+## ECI vs TriviaQA and compute vs TriviaQA
+
+TriviaQA seems to display a mild inverted-U relationship between compute (or ECI) and score on this benchmark. See the charts below — the shape of the data starts to bend downwards. The best models on this task aren't the ones with the highest compute budget or the most capable.
+
+<!-- TODO: figures — export data contracts into data/ (eci vs score, compute
+     vs score) from the analysis repo, then render with gl./glsat. components,
+     following the three-layer figure architecture. -->
+
+Compare the TriviaQA dashboard to three randomly picked benchmarks: MATH Level 5, HellaSwag, BBH.
+
+<!-- TODO: comparison figure or dashboard links for MATH Level 5 / HellaSwag / BBH. -->
+
+### Hypotheses for the inverted U-shape
+
+1. **Saturation.** Measurements near the ceiling are noisy — they don't allow us to separate models by skill from each other.
+2. **Factual knowledge is not a good proxy for general capabilities in models.** Models have a parameter budget, and you can "spend" this budget either to "buy" yourself better factual knowledge or general capabilities. Labs prefer the latter.
+3. **There aren't a lot of measurements in general:** only 29 if you don't count duplicates (n-shot for different n).

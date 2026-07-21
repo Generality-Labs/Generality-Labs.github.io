@@ -3,3 +3,8 @@
 
 /.quarto/
 **/*.quarto_ipynb
+node_modules/
+blog/posts/*/index-quarto.html
+blog/posts/*/index-quarto_files/
+blog/posts/*/compare.html
+blog/posts/*/component-demo.html
