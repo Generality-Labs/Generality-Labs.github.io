@@ -5,13 +5,13 @@
 // Two ways to use a component in a post:
 //
 //   1. Shortcode, for static props — plain markdown, no OJS cell:
-//        {{< react HelloWorld start=3 >}}
+//        {{< react MyComponent start=3 >}}
 //      (the _extensions/react shortcode emits a placeholder div and injects
 //      this bundle; `automount` below hydrates every placeholder on load)
 //
 //   2. OJS, for props driven by reactive cells:
 //        glr = import("/assets/gl-react.js")
-//        glr.mount(glr.HelloWorld, { start: someOjsValue })
+//        glr.mount(glr.components.MyComponent, { start: someOjsValue })
 //
 // New components: create the .jsx here, export it from this file AND add it
 // to `components` below (that map is what the shortcode resolves against),
@@ -27,13 +27,9 @@ export function renderInto(node, element) {
   createRoot(node).render(element);
 }
 
-import { ArrowDemo } from "./ArrowDemo.jsx";
-import { HelloWorld } from "./HelloWorld.jsx";
-
-export { ArrowDemo, HelloWorld };
-
-/** Everything reachable from the {{< react … >}} shortcode. */
-export const components = { ArrowDemo, HelloWorld };
+/** Everything reachable from the {{< react … >}} shortcode and ```jsx
+    fences. Add new components here: import, then register. */
+export const components = {};
 
 /** Render a component into a fresh detached <div> and return it — the shape
     OJS cells expect (a cell whose value is an HTMLElement displays itself). */

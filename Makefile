@@ -16,10 +16,11 @@ else
 endif
 QUARTO_URL := https://github.com/quarto-dev/quarto-cli/releases/download/v$(QUARTO_VERSION)/$(QUARTO_ASSET)
 
-.PHONY: setup build render-quarto preview compare tailwind clean-tools
+.PHONY: setup build render-quarto preview compare tailwind react clean-tools
 
-# Everything derived-and-committed in one go: rendered posts + compiled CSS.
-build: render-quarto tailwind
+# Everything derived-and-committed in one go: rendered posts + compiled CSS +
+# the React component bundle (the CI check regenerates all three via this).
+build: render-quarto tailwind react
 
 setup: $(QUARTO)
 
