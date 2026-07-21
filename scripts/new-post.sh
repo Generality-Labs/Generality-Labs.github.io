@@ -1,8 +1,8 @@
 #!/bin/bash
 # Scaffold a new blog post on the shared site shell (_includes/ partials +
 # assets/site.css), with gl-components imports and a data/ directory — the
-# same structure as blog/posts/hello-world, so the local edit server, staging
-# review layer, and deploy script all work from day one.
+# same structure as every existing post, so preview, render, and the edit
+# tooling all work from day one.
 #
 # Usage: scripts/new-post.sh <slug> ["Post title"] ["Author Name"]
 set -euo pipefail
@@ -18,11 +18,18 @@ mkdir -p "$POST/data"
 MONTH=$(date "+%B %Y")
 
 # Post-local header: eyebrow, title, abstract. Everything else (nav, fonts,
-# styles, footer) comes from the shared _includes/ partials.
-sed -e "s|<p class=\"eyebrow mb-4\">.*</p>|<p class=\"eyebrow mb-4\">Draft · $MONTH${AUTHOR:+ · By $AUTHOR}</p>|" \
-    -e "s|<h1 class=\"display-2 mb-6\">.*</h1>|<h1 class=\"display-2 mb-6\">$TITLE</h1>|" \
-    -e "s|leading-relaxed\">.*</p>|leading-relaxed\">One-paragraph abstract for the post.</p>|" \
-    blog/posts/hello-world/_header.html > "$POST/_header.html"
+# styles, footer) comes from the shared _includes/ partials. NB the trailing
+# <div class="prose"> is intentionally unclosed — _includes/post-after.html
+# closes it around the rendered post body (see .prettierignore).
+cat > "$POST/_header.html" <<HEADER
+      <header class="mb-12">
+        <p class="eyebrow mb-4">Draft · $MONTH${AUTHOR:+ · By $AUTHOR}</p>
+        <h1 class="display-2 mb-6">$TITLE</h1>
+        <p class="text-xl text-[var(--muted)] leading-relaxed">One-paragraph abstract for the post.</p>
+      </header>
+
+      <div class="prose">
+HEADER
 
 cat > "$POST/index.qmd" <<QMD
 ---
@@ -56,6 +63,6 @@ that generates them into the analysis repo.
 QMD
 
 echo "created $POST"
-echo "  render:         make render"
+echo "  render:         make build"
 echo "  edit locally:   python3 scripts/edit-server.py   →  http://localhost:8787/$POST/"
 echo "  stage + review: scripts/deploy-post.sh $POST <branch>"

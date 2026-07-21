@@ -16,7 +16,10 @@ else
 endif
 QUARTO_URL := https://github.com/quarto-dev/quarto-cli/releases/download/v$(QUARTO_VERSION)/$(QUARTO_ASSET)
 
-.PHONY: setup render preview clean-tools
+.PHONY: setup build render-quarto preview compare tailwind clean-tools
+
+# Everything derived-and-committed in one go: rendered posts + compiled CSS.
+build: render-quarto tailwind
 
 setup: $(QUARTO)
 
@@ -26,17 +29,23 @@ $(QUARTO):
 	$(QUARTO) --version
 
 # Renders every post in the _quarto.yml render list (in place, next to its
-# .qmd). The frozen forecasting post is excluded there; render it explicitly
-# by path if you ever need to regenerate it.
-render: $(QUARTO)
+# .qmd).
+render-quarto: $(QUARTO)
 	$(QUARTO) render
 
 # Preview one post with re-render on save (default-type projects can't
 # preview project-wide). Usage: make preview POST=blog/posts/my-post
-POST ?= blog/posts/hello-world
+POST ?= blog/posts/triviaqa
 
 preview: $(QUARTO)
 	$(QUARTO) preview $(POST)/index.qmd
+
+# Regenerate the static Tailwind stylesheet (committed as assets/tw.css).
+# One-off, needs node; run only when markup adds new utility classes.
+TW_CONTENT := ./index.html,./blog/index.html,./blog/posts/why-are-evaluations-broken.html,./blog/posts/*/index.html,./blog/posts/*/_header.html,./_includes/*.html
+tailwind:
+	npx --yes tailwindcss@3.4.17 -i assets/tw.input.css -o assets/tw.css \
+	  --content "$(TW_CONTENT)" --minify
 
 clean-tools:
 	rm -rf .tools

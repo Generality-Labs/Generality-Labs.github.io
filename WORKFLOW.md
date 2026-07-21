@@ -53,7 +53,7 @@ Put your work on a branch under the **`preview/`** prefix, render, and push:
 
 ```bash
 git switch -c preview/my-post-slug
-make render                                  # commit the rendered HTML
+make build                                   # render posts + compile CSS; commit the result
 git commit -am "draft: my post" && git push -u origin preview/my-post-slug
 ```
 

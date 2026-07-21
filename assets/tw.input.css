@@ -1,0 +1,6 @@
+/* Input for the one-time Tailwind compile (see `make tailwind`).
+   Output is the committed static assets/tw.css — the site has no runtime
+   Tailwind; pages link the compiled file instead of the Play CDN. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

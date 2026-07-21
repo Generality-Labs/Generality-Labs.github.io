@@ -1,0 +1,30 @@
+# Guard for the "committed artifacts" model: rendered post HTML and the
+# compiled Tailwind stylesheet are committed and served as-is from main, so
+# this check regenerates both and fails if the committed copies are stale
+# (someone edited a .qmd or markup and forgot `make build`).
+# It is a check only — deploys remain "push to main", no build step.
+name: check
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  artifacts-in-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .tools
+          key: quarto-${{ runner.os }}-${{ hashFiles('Makefile') }}
+      - run: make setup
+      - run: make build
+      - name: fail if committed artifacts are stale
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status
+            git diff | head -100
+            echo "::error::Committed artifacts don't match sources — run 'make build' locally and commit the result."
+            exit 1
+          fi
