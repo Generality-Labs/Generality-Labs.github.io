@@ -29,4 +29,14 @@ glr = import("/assets/gl-react.js")
 glr.mount(glr.HelloWorld, { start: 100 })
 ```
 
+And an arrow-function stress test, written as **actual JSX in this markdown file** — a ```` ```jsx ```` fence compiled by esbuild at render time. The component is a named export defined as an arrow function, with arrow handlers and arrows inside `.map`, taking a real array prop (no strings, no shortcode syntax):
+
+```jsx
+<ArrowDemo
+  items={["arrows", "as", "props"]}
+  label={(w) => w.toUpperCase()}
+  onPick={(w) => console.log("[ArrowDemo] picked:", w)}
+/>
+```
+
 Everything a component-bearing post needs works from here: markdown prose, `inline code`, [links](https://generality.org), OJS cells, and React islands with state — via shortcode for static props, via `glr.mount` for reactive ones.

@@ -16,15 +16,24 @@
 // New components: create the .jsx here, export it from this file AND add it
 // to `components` below (that map is what the shortcode resolves against),
 // then `make react`.
-import { createElement } from "react";
+import { createElement, Fragment } from "react";
 import { createRoot } from "react-dom/client";
 
+// Used by the ```jsx fence filter (_extensions/react/jsx.lua): cells are
+// compiled with --jsx-factory=glr.createElement / --jsx-fragment=glr.Fragment
+// and rendered into their placeholder via renderInto.
+export { createElement, Fragment };
+export function renderInto(node, element) {
+  createRoot(node).render(element);
+}
+
+import { ArrowDemo } from "./ArrowDemo.jsx";
 import { HelloWorld } from "./HelloWorld.jsx";
 
-export { HelloWorld };
+export { ArrowDemo, HelloWorld };
 
 /** Everything reachable from the {{< react … >}} shortcode. */
-export const components = { HelloWorld };
+export const components = { ArrowDemo, HelloWorld };
 
 /** Render a component into a fresh detached <div> and return it — the shape
     OJS cells expect (a cell whose value is an HTMLElement displays itself). */
